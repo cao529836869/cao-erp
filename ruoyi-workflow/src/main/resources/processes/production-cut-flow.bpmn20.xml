@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             targetNamespace="http://ruoyi.com/workflow/production">
+    <process id="production_cut_flow" name="生产领料裁剪流程" isExecutable="true">
+        <startEvent id="startEvent" name="发起生产流程"/>
+        <sequenceFlow id="flow_start_release" sourceRef="startEvent" targetRef="releaseProductionTask"/>
+
+        <serviceTask id="releaseProductionTask" name="下达生产单" flowable:delegateExpression="${releaseProductionDelegate}"/>
+        <sequenceFlow id="flow_release_picking" sourceRef="releaseProductionTask" targetRef="createPickingTask"/>
+
+        <serviceTask id="createPickingTask" name="生成领料单" flowable:delegateExpression="${createPickingDelegate}"/>
+        <sequenceFlow id="flow_picking_user" sourceRef="createPickingTask" targetRef="postPickingUserTask"/>
+
+        <userTask id="postPickingUserTask" name="领料出库过账" flowable:assignee="${pickingAssignee}"/>
+        <sequenceFlow id="flow_user_cut" sourceRef="postPickingUserTask" targetRef="createCutOrderTask"/>
+
+        <serviceTask id="createCutOrderTask" name="生成裁剪单" flowable:delegateExpression="${createCutOrderDelegate}"/>
+        <sequenceFlow id="flow_cut_user" sourceRef="createCutOrderTask" targetRef="finishCutUserTask"/>
+
+        <userTask id="finishCutUserTask" name="裁剪完成确认" flowable:assignee="${cuttingAssignee}"/>
+        <sequenceFlow id="flow_finish_end" sourceRef="finishCutUserTask" targetRef="endEvent"/>
+
+        <endEvent id="endEvent" name="流程完成"/>
+    </process>
+</definitions>

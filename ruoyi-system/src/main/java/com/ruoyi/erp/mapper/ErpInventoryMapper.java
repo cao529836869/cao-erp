@@ -11,6 +11,7 @@ public interface ErpInventoryMapper
     public ErpInventory selectInventoryForUpdate(@Param("warehouseId") Long warehouseId, @Param("itemType") String itemType,
             @Param("itemId") Long itemId, @Param("batchNo") String batchNo);
     public int insertInventory(ErpInventory inventory);
+    public int insertOrIncreaseInventory(ErpInventory inventory);
     public int increaseAvailableQty(@Param("inventoryId") Long inventoryId, @Param("qty") BigDecimal qty,
             @Param("unitPrice") BigDecimal unitPrice);
     public int decreaseAvailableQty(@Param("inventoryId") Long inventoryId, @Param("qty") BigDecimal qty);

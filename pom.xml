@@ -32,6 +32,7 @@
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <springdoc.version>3.0.2</springdoc.version>
         <minio.version>8.5.17</minio.version>
+        <flowable.version>8.0.0</flowable.version>
     </properties>
 
     <!-- 依赖声明 -->
@@ -99,6 +100,13 @@
                 <groupId>io.minio</groupId>
                 <artifactId>minio</artifactId>
                 <version>${minio.version}</version>
+            </dependency>
+
+            <!-- Flowable workflow engine -->
+            <dependency>
+                <groupId>org.flowable</groupId>
+                <artifactId>flowable-spring-boot-starter-process</artifactId>
+                <version>${flowable.version}</version>
             </dependency>
 
             <!-- io常用工具类 -->
@@ -171,6 +179,13 @@
                 <version>${ruoyi.version}</version>
             </dependency>
 
+            <!-- Workflow module -->
+            <dependency>
+                <groupId>com.ruoyi</groupId>
+                <artifactId>ruoyi-workflow</artifactId>
+                <version>${ruoyi.version}</version>
+            </dependency>
+
             <!-- 通用工具-->
             <dependency>
                 <groupId>com.ruoyi</groupId>
@@ -188,6 +203,7 @@
         <module>ruoyi-quartz</module>
         <module>ruoyi-generator</module>
         <module>ruoyi-common</module>
+        <module>ruoyi-workflow</module>
     </modules>
     <packaging>pom</packaging>
 

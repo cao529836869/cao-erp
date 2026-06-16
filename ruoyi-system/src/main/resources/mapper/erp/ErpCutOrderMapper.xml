@@ -53,7 +53,7 @@
             <if test="customerName != null and customerName != ''">and c.customer_name like concat('%', #{customerName}, '%')</if>
             <if test="cutStatus != null">and c.cut_status = #{cutStatus}</if>
         </where>
-        order by timeout_flag desc, c.plan_finish_time asc, c.cut_order_id desc
+        order by c.plan_finish_time desc, c.cut_order_id desc
     </select>
 
     <select id="selectCutOrderById" parameterType="Long" resultMap="ErpCutOrderResult">
