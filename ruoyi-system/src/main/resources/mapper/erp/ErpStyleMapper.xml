@@ -46,6 +46,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="imageUrl != null  and imageUrl != ''"> and image_url = #{imageUrl}</if>
             <if test="status != null  and status != ''"> and status = #{status}</if>
         </where>
+        order by create_time desc, style_id desc
     </select>
     
     <select id="selectErpStyleByStyleId" parameterType="Long" resultMap="ErpStyleResult">

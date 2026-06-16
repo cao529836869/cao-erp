@@ -129,14 +129,19 @@ public class ErpInboundOrderServiceImpl implements IErpInboundOrderService
             {
                 throw new ServiceException("入库数量必须大于0");
             }
-            String batchNo = StringUtils.defaultString(detail.getBatchNo());
+            String batchNo = normalizeInventoryBatchNo(detail);
             ErpInventory inventory = inventoryMapper.selectInventoryForUpdate(order.getWarehouseId(), detail.getItemType(), detail.getItemId(), batchNo);
             BigDecimal balanceQty;
             if (inventory == null)
             {
                 inventory = buildInventory(order, detail, qty);
-                inventoryMapper.insertInventory(inventory);
-                balanceQty = qty;
+                inventoryMapper.insertOrIncreaseInventory(inventory);
+                inventory = inventoryMapper.selectInventoryForUpdate(order.getWarehouseId(), detail.getItemType(), detail.getItemId(), batchNo);
+                if (inventory == null)
+                {
+                    throw new ServiceException("库存写入失败：" + detail.getItemCode());
+                }
+                balanceQty = nvl(inventory.getAvailableQty());
             }
             else
             {
@@ -186,7 +191,7 @@ public class ErpInboundOrderServiceImpl implements IErpInboundOrderService
             {
                 throw new ServiceException("入库数量必须大于0");
             }
-            String batchNo = StringUtils.defaultString(detail.getBatchNo());
+            String batchNo = normalizeInventoryBatchNo(detail);
             ErpInventory inventory = inventoryMapper.selectInventoryForUpdate(order.getWarehouseId(), detail.getItemType(), detail.getItemId(), batchNo);
             if (inventory == null || nvl(inventory.getAvailableQty()).compareTo(qty) < 0)
             {
@@ -285,7 +290,7 @@ public class ErpInboundOrderServiceImpl implements IErpInboundOrderService
         inventory.setColorName(detail.getColorName());
         inventory.setSizeName(detail.getSizeName());
         inventory.setSpecName(detail.getSpecName());
-        inventory.setBatchNo(StringUtils.defaultString(detail.getBatchNo()));
+        inventory.setBatchNo(normalizeInventoryBatchNo(detail));
         inventory.setAvailableQty(qty);
         inventory.setLockedQty(BigDecimal.ZERO);
         inventory.setUnitPrice(nvl(detail.getUnitPrice()));
@@ -317,7 +322,7 @@ public class ErpInboundOrderServiceImpl implements IErpInboundOrderService
         transaction.setItemId(detail.getItemId());
         transaction.setItemCode(detail.getItemCode());
         transaction.setItemName(detail.getItemName());
-        transaction.setBatchNo(StringUtils.defaultString(detail.getBatchNo()));
+        transaction.setBatchNo(normalizeInventoryBatchNo(detail));
         transaction.setInQty(inQty);
         transaction.setOutQty(outQty);
         transaction.setBalanceQty(balanceQty);
@@ -332,5 +337,14 @@ public class ErpInboundOrderServiceImpl implements IErpInboundOrderService
     private BigDecimal nvl(BigDecimal value)
     {
         return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private String normalizeInventoryBatchNo(ErpInboundOrderDetail detail)
+    {
+        if ("成衣".equals(detail.getItemType()))
+        {
+            return "";
+        }
+        return StringUtils.defaultString(detail.getBatchNo());
     }
 }

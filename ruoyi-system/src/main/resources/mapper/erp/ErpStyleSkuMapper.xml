@@ -39,7 +39,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="sizeName != null and sizeName != ''">and s.size_name like concat('%', #{sizeName}, '%')</if>
             <if test="status != null and status != ''">and s.status = #{status}</if>
         </where>
-        order by s.style_no asc, s.sku_id asc
+        order by s.create_time desc, s.sku_id desc
     </select>
 
     <select id="selectErpStyleSkuByStyleId" parameterType="Long" resultMap="ErpStyleSkuResult">

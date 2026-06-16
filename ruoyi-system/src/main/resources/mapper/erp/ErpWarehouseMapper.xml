@@ -37,7 +37,7 @@
             <if test="warehouseType != null and warehouseType != ''">and warehouse_type = #{warehouseType}</if>
             <if test="status != null and status != ''">and status = #{status}</if>
         </where>
-        order by warehouse_code asc
+        order by create_time desc, warehouse_id desc
     </select>
 
     <select id="selectWarehouseAll" resultMap="ErpWarehouseResult">

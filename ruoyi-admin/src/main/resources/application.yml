@@ -130,6 +130,12 @@ pagehelper:
   supportMethodsArguments: true
   params: count=countSql
 
+flowable:
+  database-schema-update: true
+  async-executor-activate: false
+  process:
+    definition-cache-limit: 256
+
 # Springdoc配置
 springdoc:
   api-docs:

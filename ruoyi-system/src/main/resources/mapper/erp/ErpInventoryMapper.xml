@@ -58,6 +58,26 @@
             #{colorName}, #{sizeName}, #{specName}, #{batchNo}, #{availableQty}, #{lockedQty}, #{unitPrice}, #{unitName}, sysdate(), #{remark})
     </insert>
 
+    <insert id="insertOrIncreaseInventory" parameterType="ErpInventory" useGeneratedKeys="true" keyProperty="inventoryId">
+        insert into erp_inventory(warehouse_id, warehouse_name, item_type, item_id, item_code, item_name,
+            color_name, size_name, spec_name, batch_no, available_qty, locked_qty, unit_price, unit_name, update_time, remark)
+        values(#{warehouseId}, #{warehouseName}, #{itemType}, #{itemId}, #{itemCode}, #{itemName},
+            #{colorName}, #{sizeName}, #{specName}, #{batchNo}, #{availableQty}, #{lockedQty}, #{unitPrice}, #{unitName}, sysdate(), #{remark})
+        on duplicate key update
+            inventory_id = last_insert_id(inventory_id),
+            warehouse_name = values(warehouse_name),
+            item_code = values(item_code),
+            item_name = values(item_name),
+            color_name = values(color_name),
+            size_name = values(size_name),
+            spec_name = values(spec_name),
+            available_qty = ifnull(available_qty, 0) + values(available_qty),
+            unit_price = values(unit_price),
+            unit_name = values(unit_name),
+            update_time = sysdate(),
+            remark = values(remark)
+    </insert>
+
     <update id="increaseAvailableQty">
         update erp_inventory
         set available_qty = ifnull(available_qty, 0) + #{qty},
