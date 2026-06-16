@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpStyleBomMapper">
+
+    <resultMap type="ErpStyleBom" id="ErpStyleBomResult">
+        <result property="bomId" column="bom_id" />
+        <result property="bomNo" column="bom_no" />
+        <result property="styleId" column="style_id" />
+        <result property="styleNo" column="style_no" />
+        <result property="versionNo" column="version_no" />
+        <result property="bomStatus" column="bom_status" />
+        <result property="effectiveDate" column="effective_date" />
+        <result property="auditBy" column="audit_by" />
+        <result property="auditTime" column="audit_time" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <select id="selectErpStyleBomByStyleId" parameterType="Long" resultMap="ErpStyleBomResult">
+        select bom_id, bom_no, style_id, style_no, version_no, bom_status, effective_date,
+               audit_by, audit_time, create_by, create_time, update_by, update_time, remark
+        from erp_style_bom
+        where style_id = #{styleId}
+        order by bom_id asc
+    </select>
+
+    <insert id="insertErpStyleBom" parameterType="ErpStyleBom" useGeneratedKeys="true" keyProperty="bomId">
+        insert into erp_style_bom
+            (bom_no, style_id, style_no, version_no, bom_status, effective_date,
+             audit_by, audit_time, create_by, create_time, update_by, update_time, remark)
+        values
+            (#{bomNo}, #{styleId}, #{styleNo}, #{versionNo}, #{bomStatus}, #{effectiveDate},
+             #{auditBy}, #{auditTime}, #{createBy}, #{createTime}, #{updateBy}, #{updateTime}, #{remark})
+    </insert>
+
+    <delete id="deleteErpStyleBomByStyleId" parameterType="Long">
+        delete from erp_style_bom where style_id = #{styleId}
+    </delete>
+
+    <delete id="deleteErpStyleBomByStyleIds" parameterType="String">
+        delete from erp_style_bom where style_id in
+        <foreach item="styleId" collection="array" open="(" separator="," close=")">
+            #{styleId}
+        </foreach>
+    </delete>
+</mapper>

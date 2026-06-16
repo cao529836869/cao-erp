@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpInboundOrderMapper">
+
+    <resultMap type="ErpInboundOrder" id="ErpInboundOrderResult">
+        <id property="inboundOrderId" column="inbound_order_id"/>
+        <result property="inboundOrderNo" column="inbound_order_no"/>
+        <result property="inboundType" column="inbound_type"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceNo" column="source_no"/>
+        <result property="supplierId" column="supplier_id"/>
+        <result property="supplierName" column="supplier_name"/>
+        <result property="customerId" column="customer_id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="warehouseId" column="warehouse_id"/>
+        <result property="warehouseName" column="warehouse_name"/>
+        <result property="inboundDate" column="inbound_date"/>
+        <result property="totalQty" column="total_qty"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="itemSummary" column="item_summary"/>
+        <result property="auditBy" column="audit_by"/>
+        <result property="auditTime" column="audit_time"/>
+        <result property="postBy" column="post_by"/>
+        <result property="postTime" column="post_time"/>
+        <result property="cancelBy" column="cancel_by"/>
+        <result property="cancelTime" column="cancel_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectInboundOrderVo">
+        select o.inbound_order_id, o.inbound_order_no, o.inbound_type, o.source_type, o.source_no, o.supplier_id, o.supplier_name,
+               o.customer_id, o.customer_name, o.warehouse_id, o.warehouse_name, o.inbound_date, o.total_qty, o.total_amount,
+               o.order_status, d.item_summary, o.audit_by, o.audit_time, o.post_by, o.post_time, o.cancel_by, o.cancel_time,
+               o.create_by, o.create_time, o.update_by, o.update_time, o.remark
+        from erp_inbound_order o
+        left join (
+            select inbound_order_id,
+                   group_concat(concat_ws(' / ', item_code, item_name, color_name, spec_name, batch_no)
+                                order by inbound_detail_id separator '; ') as item_summary
+            from erp_inbound_order_detail
+            group by inbound_order_id
+        ) d on d.inbound_order_id = o.inbound_order_id
+    </sql>
+
+    <select id="selectInboundOrderList" parameterType="ErpInboundOrder" resultMap="ErpInboundOrderResult">
+        <include refid="selectInboundOrderVo"/>
+        <where>
+            <if test="inboundOrderNo != null and inboundOrderNo != ''">and o.inbound_order_no like concat('%', #{inboundOrderNo}, '%')</if>
+            <if test="inboundType != null and inboundType != ''">and o.inbound_type = #{inboundType}</if>
+            <if test="sourceNo != null and sourceNo != ''">and o.source_no like concat('%', #{sourceNo}, '%')</if>
+            <if test="supplierName != null and supplierName != ''">and o.supplier_name like concat('%', #{supplierName}, '%')</if>
+            <if test="warehouseId != null">and o.warehouse_id = #{warehouseId}</if>
+            <if test="orderStatus != null and orderStatus != ''">and o.order_status = #{orderStatus}</if>
+            <if test="params.beginTime != null and params.beginTime != ''">and date_format(o.inbound_date, '%Y%m%d') &gt;= date_format(#{params.beginTime}, '%Y%m%d')</if>
+            <if test="params.endTime != null and params.endTime != ''">and date_format(o.inbound_date, '%Y%m%d') &lt;= date_format(#{params.endTime}, '%Y%m%d')</if>
+        </where>
+        order by o.inbound_date desc, o.inbound_order_id desc
+    </select>
+
+    <select id="selectInboundOrderById" parameterType="Long" resultMap="ErpInboundOrderResult">
+        <include refid="selectInboundOrderVo"/>
+        where o.inbound_order_id = #{inboundOrderId}
+    </select>
+
+    <select id="selectInboundOrderByIdForUpdate" parameterType="Long" resultMap="ErpInboundOrderResult">
+        <include refid="selectInboundOrderVo"/>
+        where o.inbound_order_id = #{inboundOrderId}
+        for update
+    </select>
+
+    <select id="checkInboundOrderNoUnique" parameterType="String" resultMap="ErpInboundOrderResult">
+        <include refid="selectInboundOrderVo"/>
+        where o.inbound_order_no = #{inboundOrderNo} limit 1
+    </select>
+
+    <insert id="insertInboundOrder" parameterType="ErpInboundOrder" useGeneratedKeys="true" keyProperty="inboundOrderId">
+        insert into erp_inbound_order(inbound_order_no, inbound_type, source_type, source_no, supplier_id, supplier_name,
+            customer_id, customer_name, warehouse_id, warehouse_name, inbound_date, total_qty, total_amount,
+            order_status, create_by, create_time, remark)
+        values(#{inboundOrderNo}, #{inboundType}, #{sourceType}, #{sourceNo}, #{supplierId}, #{supplierName},
+            #{customerId}, #{customerName}, #{warehouseId}, #{warehouseName}, #{inboundDate}, #{totalQty}, #{totalAmount},
+            #{orderStatus}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateInboundOrder" parameterType="ErpInboundOrder">
+        update erp_inbound_order
+        set inbound_type = #{inboundType}, source_type = #{sourceType}, source_no = #{sourceNo},
+            supplier_id = #{supplierId}, supplier_name = #{supplierName}, customer_id = #{customerId}, customer_name = #{customerName},
+            warehouse_id = #{warehouseId}, warehouse_name = #{warehouseName}, inbound_date = #{inboundDate},
+            total_qty = #{totalQty}, total_amount = #{totalAmount}, order_status = #{orderStatus},
+            update_by = #{updateBy}, update_time = sysdate(), remark = #{remark}
+        where inbound_order_id = #{inboundOrderId}
+          and order_status = '草稿'
+    </update>
+
+    <update id="updateInboundOrderPost" parameterType="ErpInboundOrder">
+        update erp_inbound_order
+        set order_status = '已入库', audit_by = #{auditBy}, audit_time = #{auditTime},
+            post_by = #{postBy}, post_time = #{postTime}, update_by = #{updateBy}, update_time = sysdate()
+        where inbound_order_id = #{inboundOrderId}
+          and order_status in ('草稿', '已审核')
+    </update>
+
+    <update id="updateInboundOrderCancel" parameterType="ErpInboundOrder">
+        update erp_inbound_order
+        set order_status = '已取消', cancel_by = #{cancelBy}, cancel_time = #{cancelTime},
+            update_by = #{updateBy}, update_time = sysdate()
+        where inbound_order_id = #{inboundOrderId}
+          and order_status = '已入库'
+    </update>
+
+    <delete id="deleteInboundOrderByIds" parameterType="Long">
+        delete from erp_inbound_order where order_status = '草稿' and inbound_order_id in
+        <foreach collection="array" item="inboundOrderId" open="(" separator="," close=")">#{inboundOrderId}</foreach>
+    </delete>
+</mapper>

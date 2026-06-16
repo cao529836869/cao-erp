@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpInventoryTransactionMapper">
+
+    <resultMap type="ErpInventoryTransaction" id="ErpInventoryTransactionResult">
+        <id property="transactionId" column="transaction_id"/>
+        <result property="transactionNo" column="transaction_no"/>
+        <result property="transactionType" column="transaction_type"/>
+        <result property="businessNo" column="business_no"/>
+        <result property="warehouseId" column="warehouse_id"/>
+        <result property="warehouseName" column="warehouse_name"/>
+        <result property="itemType" column="item_type"/>
+        <result property="itemId" column="item_id"/>
+        <result property="itemCode" column="item_code"/>
+        <result property="itemName" column="item_name"/>
+        <result property="batchNo" column="batch_no"/>
+        <result property="inQty" column="in_qty"/>
+        <result property="outQty" column="out_qty"/>
+        <result property="balanceQty" column="balance_qty"/>
+        <result property="unitName" column="unit_name"/>
+        <result property="operatorName" column="operator_name"/>
+        <result property="transactionTime" column="transaction_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <select id="selectTransactionList" parameterType="ErpInventoryTransaction" resultMap="ErpInventoryTransactionResult">
+        select transaction_id, transaction_no, transaction_type, business_no, warehouse_id, warehouse_name,
+               item_type, item_id, item_code, item_name, batch_no, in_qty, out_qty, balance_qty,
+               unit_name, operator_name, transaction_time, create_by, create_time, remark
+        from erp_inventory_transaction
+        <where>
+            <if test="transactionNo != null and transactionNo != ''">and transaction_no like concat('%', #{transactionNo}, '%')</if>
+            <if test="transactionType != null and transactionType != ''">and transaction_type = #{transactionType}</if>
+            <if test="businessNo != null and businessNo != ''">and business_no like concat('%', #{businessNo}, '%')</if>
+            <if test="warehouseId != null">and warehouse_id = #{warehouseId}</if>
+            <if test="itemType != null and itemType != ''">and item_type = #{itemType}</if>
+            <if test="itemCode != null and itemCode != '' and itemCodeExact == '1'">and item_code = #{itemCode}</if>
+            <if test="itemCode != null and itemCode != '' and itemCodeExact != '1'">and item_code like concat('%', #{itemCode}, '%')</if>
+            <if test="itemName != null and itemName != ''">and item_name like concat('%', #{itemName}, '%')</if>
+            <if test="batchNo != null and batchNo != ''">and batch_no like concat('%', #{batchNo}, '%')</if>
+        </where>
+        order by transaction_time desc, transaction_id desc
+    </select>
+
+    <insert id="insertTransaction" parameterType="ErpInventoryTransaction" useGeneratedKeys="true" keyProperty="transactionId">
+        insert into erp_inventory_transaction(transaction_no, transaction_type, business_no, warehouse_id, warehouse_name,
+            item_type, item_id, item_code, item_name, batch_no, in_qty, out_qty, balance_qty, unit_name,
+            operator_name, transaction_time, create_by, create_time, remark)
+        values(#{transactionNo}, #{transactionType}, #{businessNo}, #{warehouseId}, #{warehouseName},
+            #{itemType}, #{itemId}, #{itemCode}, #{itemName}, #{batchNo}, #{inQty}, #{outQty}, #{balanceQty}, #{unitName},
+            #{operatorName}, #{transactionTime}, #{createBy}, sysdate(), #{remark})
+    </insert>
+</mapper>

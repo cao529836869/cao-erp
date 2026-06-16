@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpOutboundOrderMapper">
+
+    <resultMap type="ErpOutboundOrder" id="ErpOutboundOrderResult">
+        <id property="outboundOrderId" column="outbound_order_id"/>
+        <result property="outboundOrderNo" column="outbound_order_no"/>
+        <result property="outboundType" column="outbound_type"/>
+        <result property="sourceType" column="source_type"/>
+        <result property="sourceNo" column="source_no"/>
+        <result property="customerId" column="customer_id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="supplierId" column="supplier_id"/>
+        <result property="supplierName" column="supplier_name"/>
+        <result property="warehouseId" column="warehouse_id"/>
+        <result property="warehouseName" column="warehouse_name"/>
+        <result property="outboundDate" column="outbound_date"/>
+        <result property="totalQty" column="total_qty"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="itemSummary" column="item_summary"/>
+        <result property="auditBy" column="audit_by"/>
+        <result property="auditTime" column="audit_time"/>
+        <result property="pickBy" column="pick_by"/>
+        <result property="pickTime" column="pick_time"/>
+        <result property="postBy" column="post_by"/>
+        <result property="postTime" column="post_time"/>
+        <result property="cancelBy" column="cancel_by"/>
+        <result property="cancelTime" column="cancel_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectOutboundOrderVo">
+        select o.outbound_order_id, o.outbound_order_no, o.outbound_type, o.source_type, o.source_no, o.customer_id, o.customer_name,
+               o.supplier_id, o.supplier_name, o.warehouse_id, o.warehouse_name, o.outbound_date, o.total_qty, o.total_amount,
+               o.order_status, d.item_summary, o.audit_by, o.audit_time, o.pick_by, o.pick_time, o.post_by, o.post_time, o.cancel_by, o.cancel_time,
+               o.create_by, o.create_time, o.update_by, o.update_time, o.remark
+        from erp_outbound_order o
+        left join (
+            select outbound_order_id,
+                   group_concat(concat_ws(' / ', item_code, item_name, color_name, spec_name, batch_no)
+                                order by outbound_detail_id separator ';') as item_summary
+            from erp_outbound_order_detail
+            group by outbound_order_id
+        ) d on d.outbound_order_id = o.outbound_order_id
+    </sql>
+
+    <select id="selectOutboundOrderList" parameterType="ErpOutboundOrder" resultMap="ErpOutboundOrderResult">
+        <include refid="selectOutboundOrderVo"/>
+        <where>
+            <if test="outboundOrderNo != null and outboundOrderNo != ''">and o.outbound_order_no like concat('%', #{outboundOrderNo}, '%')</if>
+            <if test="outboundType != null and outboundType != ''">and o.outbound_type = #{outboundType}</if>
+            <if test="sourceNo != null and sourceNo != ''">and o.source_no like concat('%', #{sourceNo}, '%')</if>
+            <if test="customerName != null and customerName != ''">and o.customer_name like concat('%', #{customerName}, '%')</if>
+            <if test="warehouseId != null">and o.warehouse_id = #{warehouseId}</if>
+            <if test="orderStatus != null and orderStatus != ''">and o.order_status = #{orderStatus}</if>
+            <if test="params.beginTime != null and params.beginTime != ''">and date_format(o.outbound_date, '%Y%m%d') &gt;= date_format(#{params.beginTime}, '%Y%m%d')</if>
+            <if test="params.endTime != null and params.endTime != ''">and date_format(o.outbound_date, '%Y%m%d') &lt;= date_format(#{params.endTime}, '%Y%m%d')</if>
+        </where>
+        order by o.outbound_date desc, o.outbound_order_id desc
+    </select>
+
+    <select id="selectOutboundOrderById" parameterType="Long" resultMap="ErpOutboundOrderResult">
+        <include refid="selectOutboundOrderVo"/>
+        where o.outbound_order_id = #{outboundOrderId}
+    </select>
+
+    <select id="selectOutboundOrderByIdForUpdate" parameterType="Long" resultMap="ErpOutboundOrderResult">
+        <include refid="selectOutboundOrderVo"/>
+        where o.outbound_order_id = #{outboundOrderId}
+        for update
+    </select>
+
+    <select id="checkOutboundOrderNoUnique" parameterType="String" resultMap="ErpOutboundOrderResult">
+        <include refid="selectOutboundOrderVo"/>
+        where o.outbound_order_no = #{outboundOrderNo} limit 1
+    </select>
+
+    <insert id="insertOutboundOrder" parameterType="ErpOutboundOrder" useGeneratedKeys="true" keyProperty="outboundOrderId">
+        insert into erp_outbound_order(outbound_order_no, outbound_type, source_type, source_no, customer_id, customer_name,
+            supplier_id, supplier_name, warehouse_id, warehouse_name, outbound_date, total_qty, total_amount,
+            order_status, create_by, create_time, remark)
+        values(#{outboundOrderNo}, #{outboundType}, #{sourceType}, #{sourceNo}, #{customerId}, #{customerName},
+            #{supplierId}, #{supplierName}, #{warehouseId}, #{warehouseName}, #{outboundDate}, #{totalQty}, #{totalAmount},
+            #{orderStatus}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateOutboundOrder" parameterType="ErpOutboundOrder">
+        update erp_outbound_order
+        set outbound_type = #{outboundType}, source_type = #{sourceType}, source_no = #{sourceNo},
+            customer_id = #{customerId}, customer_name = #{customerName}, supplier_id = #{supplierId}, supplier_name = #{supplierName},
+            warehouse_id = #{warehouseId}, warehouse_name = #{warehouseName}, outbound_date = #{outboundDate},
+            total_qty = #{totalQty}, total_amount = #{totalAmount}, order_status = #{orderStatus},
+            update_by = #{updateBy}, update_time = sysdate(), remark = #{remark}
+        where outbound_order_id = #{outboundOrderId}
+          and order_status = '草稿'
+    </update>
+
+    <update id="updateOutboundOrderPost" parameterType="ErpOutboundOrder">
+        update erp_outbound_order
+        set order_status = '已出库', audit_by = #{auditBy}, audit_time = #{auditTime},
+            pick_by = #{pickBy}, pick_time = #{pickTime}, post_by = #{postBy}, post_time = #{postTime},
+            update_by = #{updateBy}, update_time = sysdate()
+        where outbound_order_id = #{outboundOrderId}
+          and order_status in ('草稿', '已审核', '已拣货')
+    </update>
+
+    <update id="updateOutboundOrderCancel" parameterType="ErpOutboundOrder">
+        update erp_outbound_order
+        set order_status = '已取消', cancel_by = #{cancelBy}, cancel_time = #{cancelTime},
+            update_by = #{updateBy}, update_time = sysdate()
+        where outbound_order_id = #{outboundOrderId}
+          and order_status = '已出库'
+    </update>
+
+    <update id="updateOutboundOrderCompleteBySource" parameterType="ErpOutboundOrder">
+        update erp_outbound_order
+        set order_status = '已完成', update_by = #{updateBy}, update_time = sysdate()
+        where source_no = #{sourceNo}
+          and outbound_type = #{outboundType}
+          and order_status = '已出库'
+    </update>
+
+    <delete id="deleteOutboundOrderByIds" parameterType="Long">
+        delete from erp_outbound_order where order_status = '草稿' and outbound_order_id in
+        <foreach collection="array" item="outboundOrderId" open="(" separator="," close=")">#{outboundOrderId}</foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpStyleBomDetailMapper">
+
+    <resultMap type="ErpStyleBomDetail" id="ErpStyleBomDetailResult">
+        <result property="bomDetailId" column="bom_detail_id" />
+        <result property="bomId" column="bom_id" />
+        <result property="materialId" column="material_id" />
+        <result property="materialSkuId" column="material_sku_id" />
+        <result property="materialCode" column="material_code" />
+        <result property="materialName" column="material_name" />
+        <result property="materialType" column="material_type" />
+        <result property="colorName" column="color_name" />
+        <result property="specName" column="spec_name" />
+        <result property="usageQty" column="usage_qty" />
+        <result property="lossRate" column="loss_rate" />
+        <result property="unitName" column="unit_name" />
+        <result property="positionName" column="position_name" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <select id="selectErpStyleBomDetailByBomId" parameterType="Long" resultMap="ErpStyleBomDetailResult">
+        select bom_detail_id, bom_id, material_id, material_sku_id, material_code, material_name,
+               material_type, color_name, spec_name, usage_qty, loss_rate, unit_name, position_name,
+               create_by, create_time, update_by, update_time, remark
+        from erp_style_bom_detail
+        where bom_id = #{bomId}
+        order by bom_detail_id asc
+    </select>
+
+    <insert id="batchInsertErpStyleBomDetail" parameterType="java.util.List">
+        insert into erp_style_bom_detail
+            (bom_id, material_id, material_sku_id, material_code, material_name, material_type,
+             color_name, spec_name, usage_qty, loss_rate, unit_name, position_name,
+             create_by, create_time, update_by, update_time, remark)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.bomId}, #{item.materialId}, #{item.materialSkuId}, #{item.materialCode},
+             #{item.materialName}, #{item.materialType}, #{item.colorName}, #{item.specName},
+             #{item.usageQty}, #{item.lossRate}, #{item.unitName}, #{item.positionName},
+             #{item.createBy}, #{item.createTime}, #{item.updateBy}, #{item.updateTime}, #{item.remark})
+        </foreach>
+    </insert>
+
+    <update id="updateMaterialInfoByMaterialId" parameterType="ErpMaterial">
+        update erp_style_bom_detail
+        set material_code = #{materialCode},
+            material_name = #{materialName},
+            material_type = #{materialType},
+            unit_name = #{unitName},
+            update_time = sysdate()
+        where material_id = #{materialId}
+    </update>
+
+    <update id="updateMaterialSkuInfoBySkuId" parameterType="ErpMaterialSku">
+        update erp_style_bom_detail
+        set material_code = #{materialCode},
+            color_name = #{colorName},
+            spec_name = #{specName},
+            unit_name = #{unitName},
+            update_time = sysdate()
+        where material_sku_id = #{materialSkuId}
+    </update>
+
+    <delete id="deleteErpStyleBomDetailByBomId" parameterType="Long">
+        delete from erp_style_bom_detail where bom_id = #{bomId}
+    </delete>
+
+    <delete id="deleteErpStyleBomDetailByStyleId" parameterType="Long">
+        delete from erp_style_bom_detail
+        where bom_id in (select bom_id from erp_style_bom where style_id = #{styleId})
+    </delete>
+
+    <delete id="deleteErpStyleBomDetailByStyleIds" parameterType="String">
+        delete from erp_style_bom_detail
+        where bom_id in (
+            select bom_id from erp_style_bom where style_id in
+            <foreach item="styleId" collection="array" open="(" separator="," close=")">
+                #{styleId}
+            </foreach>
+        )
+    </delete>
+</mapper>

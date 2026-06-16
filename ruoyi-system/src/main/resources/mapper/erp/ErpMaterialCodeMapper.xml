@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpMaterialCodeMapper">
+
+    <select id="selectMaxMaterialCodeByPrefix" resultType="String">
+        select max(material_code)
+        from (
+            select material_code from erp_material where material_code like concat(#{prefix}, '%')
+            union all
+            select material_code from erp_style_bom_detail where material_code like concat(#{prefix}, '%')
+        ) t
+    </select>
+</mapper>

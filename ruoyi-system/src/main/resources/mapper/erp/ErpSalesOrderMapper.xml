@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpSalesOrderMapper">
+    <resultMap type="ErpSalesOrder" id="ErpSalesOrderResult">
+        <id property="salesOrderId" column="sales_order_id"/>
+        <result property="salesOrderNo" column="sales_order_no"/>
+        <result property="customerId" column="customer_id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="orderDate" column="order_date"/>
+        <result property="deliveryDate" column="delivery_date"/>
+        <result property="totalQty" column="total_qty"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="itemSummary" column="item_summary"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectSalesOrderVo">
+        select s.sales_order_id, s.sales_order_no, s.customer_id, s.customer_name, s.order_date,
+               s.delivery_date, s.total_qty, s.total_amount, s.order_status, d.item_summary,
+               s.create_by, s.create_time, s.update_by, s.update_time, s.remark
+        from erp_sales_order s
+        left join (
+            select sales_order_id,
+                   group_concat(concat_ws(' / ', sku_code, style_no, style_name, color_name, size_name, order_qty)
+                                order by sales_order_detail_id separator '; ') as item_summary
+            from erp_sales_order_detail
+            group by sales_order_id
+        ) d on d.sales_order_id = s.sales_order_id
+    </sql>
+
+    <select id="selectSalesOrderList" parameterType="ErpSalesOrder" resultMap="ErpSalesOrderResult">
+        <include refid="selectSalesOrderVo"/>
+        <where>
+            <if test="salesOrderNo != null and salesOrderNo != ''">and s.sales_order_no like concat('%', #{salesOrderNo}, '%')</if>
+            <if test="customerName != null and customerName != ''">and s.customer_name like concat('%', #{customerName}, '%')</if>
+            <if test="orderStatus != null and orderStatus != ''">and s.order_status = #{orderStatus}</if>
+        </where>
+        order by s.order_date desc, s.sales_order_id desc
+    </select>
+
+    <select id="selectSalesOrderById" parameterType="Long" resultMap="ErpSalesOrderResult">
+        <include refid="selectSalesOrderVo"/>
+        where s.sales_order_id = #{salesOrderId}
+    </select>
+
+    <insert id="insertSalesOrder" parameterType="ErpSalesOrder" useGeneratedKeys="true" keyProperty="salesOrderId">
+        insert into erp_sales_order(sales_order_no, customer_id, customer_name, order_date, delivery_date,
+            total_qty, total_amount, order_status, create_by, create_time, remark)
+        values(#{salesOrderNo}, #{customerId}, #{customerName}, #{orderDate}, #{deliveryDate},
+            #{totalQty}, #{totalAmount}, #{orderStatus}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateSalesOrder" parameterType="ErpSalesOrder">
+        update erp_sales_order
+        set customer_id = #{customerId}, customer_name = #{customerName}, order_date = #{orderDate},
+            delivery_date = #{deliveryDate}, total_qty = #{totalQty}, total_amount = #{totalAmount},
+            order_status = #{orderStatus}, update_by = #{updateBy}, update_time = sysdate(), remark = #{remark}
+        where sales_order_id = #{salesOrderId}
+    </update>
+
+    <delete id="deleteSalesOrderByIds" parameterType="Long">
+        delete from erp_sales_order where sales_order_id in
+        <foreach collection="array" item="salesOrderId" open="(" separator="," close=")">#{salesOrderId}</foreach>
+    </delete>
+</mapper>

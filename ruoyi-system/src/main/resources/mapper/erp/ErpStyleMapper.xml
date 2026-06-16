@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpStyleMapper">
+    
+    <resultMap type="ErpStyle" id="ErpStyleResult">
+        <result property="styleId"    column="style_id"    />
+        <result property="styleNo"    column="style_no"    />
+        <result property="styleName"    column="style_name"    />
+        <result property="categoryName"    column="category_name"    />
+        <result property="brandName"    column="brand_name"    />
+        <result property="seasonName"    column="season_name"    />
+        <result property="yearName"    column="year_name"    />
+        <result property="genderType"    column="gender_type"    />
+        <result property="designer"    column="designer"    />
+        <result property="sampleStatus"    column="sample_status"    />
+        <result property="productionStatus"    column="production_status"    />
+        <result property="imageUrl"    column="image_url"    />
+        <result property="status"    column="status"    />
+        <result property="delFlag"    column="del_flag"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectErpStyleVo">
+        select style_id, style_no, style_name, category_name, brand_name, season_name, year_name, gender_type, designer, sample_status, production_status, image_url, status, del_flag, create_by, create_time, update_by, update_time, remark from erp_style
+    </sql>
+
+    <select id="selectErpStyleList" parameterType="ErpStyle" resultMap="ErpStyleResult">
+        <include refid="selectErpStyleVo"/>
+        <where>  
+            <if test="styleNo != null  and styleNo != ''"> and style_no = #{styleNo}</if>
+            <if test="styleName != null  and styleName != ''"> and style_name like concat('%', #{styleName}, '%')</if>
+            <if test="categoryName != null  and categoryName != ''"> and category_name like concat('%', #{categoryName}, '%')</if>
+            <if test="brandName != null  and brandName != ''"> and brand_name like concat('%', #{brandName}, '%')</if>
+            <if test="seasonName != null  and seasonName != ''"> and season_name like concat('%', #{seasonName}, '%')</if>
+            <if test="yearName != null  and yearName != ''"> and year_name like concat('%', #{yearName}, '%')</if>
+            <if test="genderType != null  and genderType != ''"> and gender_type = #{genderType}</if>
+            <if test="designer != null  and designer != ''"> and designer = #{designer}</if>
+            <if test="sampleStatus != null  and sampleStatus != ''"> and sample_status = #{sampleStatus}</if>
+            <if test="productionStatus != null  and productionStatus != ''"> and production_status = #{productionStatus}</if>
+            <if test="imageUrl != null  and imageUrl != ''"> and image_url = #{imageUrl}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+        </where>
+    </select>
+    
+    <select id="selectErpStyleByStyleId" parameterType="Long" resultMap="ErpStyleResult">
+        <include refid="selectErpStyleVo"/>
+        where style_id = #{styleId}
+    </select>
+
+    <insert id="insertErpStyle" parameterType="ErpStyle" useGeneratedKeys="true" keyProperty="styleId">
+        insert into erp_style
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="styleNo != null and styleNo != ''">style_no,</if>
+            <if test="styleName != null and styleName != ''">style_name,</if>
+            <if test="categoryName != null">category_name,</if>
+            <if test="brandName != null">brand_name,</if>
+            <if test="seasonName != null">season_name,</if>
+            <if test="yearName != null">year_name,</if>
+            <if test="genderType != null">gender_type,</if>
+            <if test="designer != null">designer,</if>
+            <if test="sampleStatus != null">sample_status,</if>
+            <if test="productionStatus != null">production_status,</if>
+            <if test="imageUrl != null">image_url,</if>
+            <if test="status != null">status,</if>
+            <if test="delFlag != null">del_flag,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="styleNo != null and styleNo != ''">#{styleNo},</if>
+            <if test="styleName != null and styleName != ''">#{styleName},</if>
+            <if test="categoryName != null">#{categoryName},</if>
+            <if test="brandName != null">#{brandName},</if>
+            <if test="seasonName != null">#{seasonName},</if>
+            <if test="yearName != null">#{yearName},</if>
+            <if test="genderType != null">#{genderType},</if>
+            <if test="designer != null">#{designer},</if>
+            <if test="sampleStatus != null">#{sampleStatus},</if>
+            <if test="productionStatus != null">#{productionStatus},</if>
+            <if test="imageUrl != null">#{imageUrl},</if>
+            <if test="status != null">#{status},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+         </trim>
+    </insert>
+
+    <update id="updateErpStyle" parameterType="ErpStyle">
+        update erp_style
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="styleNo != null and styleNo != ''">style_no = #{styleNo},</if>
+            <if test="styleName != null and styleName != ''">style_name = #{styleName},</if>
+            <if test="categoryName != null">category_name = #{categoryName},</if>
+            <if test="brandName != null">brand_name = #{brandName},</if>
+            <if test="seasonName != null">season_name = #{seasonName},</if>
+            <if test="yearName != null">year_name = #{yearName},</if>
+            <if test="genderType != null">gender_type = #{genderType},</if>
+            <if test="designer != null">designer = #{designer},</if>
+            <if test="sampleStatus != null">sample_status = #{sampleStatus},</if>
+            <if test="productionStatus != null">production_status = #{productionStatus},</if>
+            <if test="imageUrl != null">image_url = #{imageUrl},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where style_id = #{styleId}
+    </update>
+
+    <delete id="deleteErpStyleByStyleId" parameterType="Long">
+        delete from erp_style where style_id = #{styleId}
+    </delete>
+
+    <delete id="deleteErpStyleByStyleIds" parameterType="String">
+        delete from erp_style where style_id in 
+        <foreach item="styleId" collection="array" open="(" separator="," close=")">
+            #{styleId}
+        </foreach>
+    </delete>
+</mapper>

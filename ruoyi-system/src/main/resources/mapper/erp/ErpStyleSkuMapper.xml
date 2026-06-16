@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpStyleSkuMapper">
+
+    <resultMap type="ErpStyleSku" id="ErpStyleSkuResult">
+        <result property="skuId" column="sku_id" />
+        <result property="styleId" column="style_id" />
+        <result property="styleName" column="style_name" />
+        <result property="styleNo" column="style_no" />
+        <result property="skuCode" column="sku_code" />
+        <result property="colorCode" column="color_code" />
+        <result property="colorName" column="color_name" />
+        <result property="sizeCode" column="size_code" />
+        <result property="sizeName" column="size_name" />
+        <result property="barcode" column="barcode" />
+        <result property="retailPrice" column="retail_price" />
+        <result property="status" column="status" />
+        <result property="delFlag" column="del_flag" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+        <result property="remark" column="remark" />
+    </resultMap>
+
+    <select id="selectErpStyleSkuList" parameterType="ErpStyleSku" resultMap="ErpStyleSkuResult">
+        select s.sku_id, s.style_id, s.style_no, s.sku_code, s.color_code, s.color_name, s.size_code, s.size_name,
+               s.barcode, s.retail_price, s.status, s.del_flag, s.create_by, s.create_time, s.update_by, s.update_time,
+               s.remark, st.style_name
+        from erp_style_sku s
+        left join erp_style st on st.style_id = s.style_id
+        <where>
+            s.del_flag = '0'
+            <if test="styleNo != null and styleNo != ''">and s.style_no like concat('%', #{styleNo}, '%')</if>
+            <if test="skuCode != null and skuCode != ''">and s.sku_code like concat('%', #{skuCode}, '%')</if>
+            <if test="colorName != null and colorName != ''">and s.color_name like concat('%', #{colorName}, '%')</if>
+            <if test="sizeName != null and sizeName != ''">and s.size_name like concat('%', #{sizeName}, '%')</if>
+            <if test="status != null and status != ''">and s.status = #{status}</if>
+        </where>
+        order by s.style_no asc, s.sku_id asc
+    </select>
+
+    <select id="selectErpStyleSkuByStyleId" parameterType="Long" resultMap="ErpStyleSkuResult">
+        select sku_id, style_id, style_no, sku_code, color_code, color_name, size_code, size_name,
+               barcode, retail_price, status, del_flag, create_by, create_time, update_by, update_time, remark
+        from erp_style_sku
+        where style_id = #{styleId}
+        order by sku_id asc
+    </select>
+
+    <insert id="batchInsertErpStyleSku" parameterType="java.util.List">
+        insert into erp_style_sku
+            (style_id, style_no, sku_code, color_code, color_name, size_code, size_name,
+             barcode, retail_price, status, del_flag, create_by, create_time, update_by, update_time, remark)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.styleId}, #{item.styleNo}, #{item.skuCode}, #{item.colorCode}, #{item.colorName},
+             #{item.sizeCode}, #{item.sizeName}, #{item.barcode}, #{item.retailPrice}, #{item.status},
+             #{item.delFlag}, #{item.createBy}, #{item.createTime}, #{item.updateBy}, #{item.updateTime}, #{item.remark})
+        </foreach>
+    </insert>
+
+    <delete id="deleteErpStyleSkuByStyleId" parameterType="Long">
+        delete from erp_style_sku where style_id = #{styleId}
+    </delete>
+
+    <delete id="deleteErpStyleSkuByStyleIds" parameterType="String">
+        delete from erp_style_sku where style_id in
+        <foreach item="styleId" collection="array" open="(" separator="," close=")">
+            #{styleId}
+        </foreach>
+    </delete>
+</mapper>

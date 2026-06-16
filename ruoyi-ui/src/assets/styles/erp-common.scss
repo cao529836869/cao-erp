@@ -1,0 +1,136 @@
+.erp-table {
+  .el-table__header th {
+    background: #f7f9fc;
+    color: #4b5b70;
+    font-weight: 700;
+  }
+
+  .el-table__body td {
+    color: #4b5b70;
+  }
+}
+
+.erp-code-text,
+.erp-code-link {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid #c8d7eb;
+  border-radius: 4px;
+  background: #f3f7fc;
+  color: #1f4e7a;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0;
+  box-shadow: inset 3px 0 0 #4b86c5;
+}
+
+.erp-code-link {
+  cursor: pointer;
+}
+
+.erp-code-link:hover {
+  border-color: #409eff;
+  background: #ecf5ff;
+  color: #1d72c9;
+}
+
+.erp-name-text {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 4px;
+  background: #f7f9fc;
+  color: #1f2d3d;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 22px;
+  letter-spacing: 0;
+  box-shadow: inset 3px 0 0 #95a8bd;
+}
+
+.erp-summary-text,
+.erp-muted-strong {
+  color: #4b5b70;
+  font-weight: 600;
+}
+
+.erp-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 100%;
+  min-width: 54px;
+  height: 24px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 22px;
+  white-space: nowrap;
+  box-shadow: 0 1px 2px rgba(31, 45, 61, 0.08);
+}
+
+.erp-chip-green {
+  border-color: #b8d8cf;
+  background: #edf8f5;
+  color: #1f6f5b;
+}
+
+.erp-chip-blue {
+  border-color: #c9d6f2;
+  background: #f1f5ff;
+  color: #315fba;
+}
+
+.erp-chip-amber {
+  border-color: #ead3a5;
+  background: #fff8e8;
+  color: #8a5b12;
+}
+
+.erp-chip-orange {
+  border-color: #efd0b8;
+  background: #fff4ec;
+  color: #9a5525;
+}
+
+.erp-chip-purple {
+  border-color: #d5c7ee;
+  background: #f7f2ff;
+  color: #6542a5;
+}
+
+.erp-chip-cyan {
+  border-color: #bddde7;
+  background: #eef9fc;
+  color: #277083;
+}
+
+.erp-chip-red {
+  border-color: #e8c5ca;
+  background: #fff2f4;
+  color: #9a3c4a;
+}
+
+.erp-chip-gray {
+  border-color: #d7dde6;
+  background: #f6f8fb;
+  color: #5e6d82;
+}
+
+.erp-warehouse-pill {
+  min-width: 64px;
+}
+
+.erp-number-strong {
+  color: #344563;
+  font-weight: 700;
+}

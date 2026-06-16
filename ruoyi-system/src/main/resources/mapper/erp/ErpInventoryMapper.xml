@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpInventoryMapper">
+
+    <resultMap type="ErpInventory" id="ErpInventoryResult">
+        <id property="inventoryId" column="inventory_id"/>
+        <result property="warehouseId" column="warehouse_id"/>
+        <result property="warehouseName" column="warehouse_name"/>
+        <result property="itemType" column="item_type"/>
+        <result property="itemId" column="item_id"/>
+        <result property="itemCode" column="item_code"/>
+        <result property="itemName" column="item_name"/>
+        <result property="colorName" column="color_name"/>
+        <result property="sizeName" column="size_name"/>
+        <result property="specName" column="spec_name"/>
+        <result property="batchNo" column="batch_no"/>
+        <result property="availableQty" column="available_qty"/>
+        <result property="lockedQty" column="locked_qty"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="unitName" column="unit_name"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectInventoryVo">
+        select inventory_id, warehouse_id, warehouse_name, item_type, item_id, item_code, item_name,
+               color_name, size_name, spec_name, batch_no, available_qty, locked_qty, unit_price, unit_name, update_time, remark
+        from erp_inventory
+    </sql>
+
+    <select id="selectInventoryList" parameterType="ErpInventory" resultMap="ErpInventoryResult">
+        <include refid="selectInventoryVo"/>
+        <where>
+            <if test="warehouseId != null">and warehouse_id = #{warehouseId}</if>
+            <if test="warehouseName != null and warehouseName != ''">and warehouse_name like concat('%', #{warehouseName}, '%')</if>
+            <if test="itemType != null and itemType != ''">and item_type = #{itemType}</if>
+            <if test="itemId != null">and item_id = #{itemId}</if>
+            <if test="itemCode != null and itemCode != ''">and item_code like concat('%', #{itemCode}, '%')</if>
+            <if test="itemName != null and itemName != ''">and item_name like concat('%', #{itemName}, '%')</if>
+            <if test="batchNo != null and batchNo != ''">and batch_no like concat('%', #{batchNo}, '%')</if>
+        </where>
+        order by update_time desc, inventory_id desc
+    </select>
+
+    <select id="selectInventoryForUpdate" resultMap="ErpInventoryResult">
+        <include refid="selectInventoryVo"/>
+        where warehouse_id = #{warehouseId}
+          and item_type = #{itemType}
+          and item_id = #{itemId}
+          and ifnull(batch_no, '') = ifnull(#{batchNo}, '')
+        for update
+    </select>
+
+    <insert id="insertInventory" parameterType="ErpInventory" useGeneratedKeys="true" keyProperty="inventoryId">
+        insert into erp_inventory(warehouse_id, warehouse_name, item_type, item_id, item_code, item_name,
+            color_name, size_name, spec_name, batch_no, available_qty, locked_qty, unit_price, unit_name, update_time, remark)
+        values(#{warehouseId}, #{warehouseName}, #{itemType}, #{itemId}, #{itemCode}, #{itemName},
+            #{colorName}, #{sizeName}, #{specName}, #{batchNo}, #{availableQty}, #{lockedQty}, #{unitPrice}, #{unitName}, sysdate(), #{remark})
+    </insert>
+
+    <update id="increaseAvailableQty">
+        update erp_inventory
+        set available_qty = ifnull(available_qty, 0) + #{qty},
+            unit_price = ifnull(#{unitPrice}, unit_price),
+            update_time = sysdate()
+        where inventory_id = #{inventoryId}
+    </update>
+
+    <update id="decreaseAvailableQty">
+        update erp_inventory
+        set available_qty = ifnull(available_qty, 0) - #{qty}, update_time = sysdate()
+        where inventory_id = #{inventoryId}
+          and ifnull(available_qty, 0) &gt;= #{qty}
+    </update>
+</mapper>

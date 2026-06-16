@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpProductionOrderMapper">
+
+    <resultMap type="ErpProductionOrder" id="ErpProductionOrderResult">
+        <id property="productionOrderId" column="production_order_id"/>
+        <result property="productionOrderNo" column="production_order_no"/>
+        <result property="salesOrderId" column="sales_order_id"/>
+        <result property="salesOrderNo" column="sales_order_no"/>
+        <result property="customerId" column="customer_id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="planStartDate" column="plan_start_date"/>
+        <result property="planFinishDate" column="plan_finish_date"/>
+        <result property="totalQty" column="total_qty"/>
+        <result property="completedQty" column="completed_qty"/>
+        <result property="orderStatus" column="order_status"/>
+        <result property="itemSummary" column="item_summary"/>
+        <result property="pickingPostedFlag" column="picking_posted_flag"/>
+        <result property="auditBy" column="audit_by"/>
+        <result property="auditTime" column="audit_time"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectProductionOrderVo">
+        select o.production_order_id, o.production_order_no, o.sales_order_id, o.sales_order_no,
+               o.customer_id, o.customer_name, o.plan_start_date, o.plan_finish_date,
+               o.total_qty, o.completed_qty, o.order_status, d.item_summary, ifnull(p.picking_posted_flag, 0) as picking_posted_flag,
+               o.audit_by, o.audit_time, o.create_by, o.create_time, o.update_by, o.update_time, o.remark
+        from erp_production_order o
+        left join (
+            select production_order_id,
+                   group_concat(concat_ws(' / ', style_no, style_name, color_name, size_name)
+                                order by production_order_detail_id separator '; ') as item_summary
+            from erp_production_order_detail
+            group by production_order_id
+        ) d on d.production_order_id = o.production_order_id
+        left join (
+            select source_no,
+                   max(case when outbound_type = '生产领料' and order_status = '已出库' then 1 else 0 end) as picking_posted_flag
+            from erp_outbound_order
+            group by source_no
+        ) p on p.source_no = o.production_order_no
+    </sql>
+
+    <select id="selectProductionOrderList" parameterType="ErpProductionOrder" resultMap="ErpProductionOrderResult">
+        <include refid="selectProductionOrderVo"/>
+        <where>
+            <if test="productionOrderNo != null and productionOrderNo != ''">and o.production_order_no like concat('%', #{productionOrderNo}, '%')</if>
+            <if test="salesOrderNo != null and salesOrderNo != ''">and o.sales_order_no like concat('%', #{salesOrderNo}, '%')</if>
+            <if test="customerName != null and customerName != ''">and o.customer_name like concat('%', #{customerName}, '%')</if>
+            <if test="orderStatus != null and orderStatus != ''">and o.order_status = #{orderStatus}</if>
+            <if test="params.beginTime != null and params.beginTime != ''">and date_format(o.plan_start_date, '%Y%m%d') &gt;= date_format(#{params.beginTime}, '%Y%m%d')</if>
+            <if test="params.endTime != null and params.endTime != ''">and date_format(o.plan_finish_date, '%Y%m%d') &lt;= date_format(#{params.endTime}, '%Y%m%d')</if>
+        </where>
+        order by o.plan_finish_date asc, o.production_order_id desc
+    </select>
+
+    <select id="selectProductionOrderById" parameterType="Long" resultMap="ErpProductionOrderResult">
+        <include refid="selectProductionOrderVo"/>
+        where o.production_order_id = #{productionOrderId}
+    </select>
+
+    <select id="checkProductionOrderNoUnique" parameterType="String" resultMap="ErpProductionOrderResult">
+        <include refid="selectProductionOrderVo"/>
+        where o.production_order_no = #{productionOrderNo} limit 1
+    </select>
+
+    <insert id="insertProductionOrder" parameterType="ErpProductionOrder" useGeneratedKeys="true" keyProperty="productionOrderId">
+        insert into erp_production_order(production_order_no, sales_order_id, sales_order_no, customer_id, customer_name,
+            plan_start_date, plan_finish_date, total_qty, completed_qty, order_status, create_by, create_time, remark)
+        values(#{productionOrderNo}, #{salesOrderId}, #{salesOrderNo}, #{customerId}, #{customerName},
+            #{planStartDate}, #{planFinishDate}, #{totalQty}, #{completedQty}, #{orderStatus}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateProductionOrder" parameterType="ErpProductionOrder">
+        update erp_production_order
+        set sales_order_id = #{salesOrderId}, sales_order_no = #{salesOrderNo}, customer_id = #{customerId},
+            customer_name = #{customerName}, plan_start_date = #{planStartDate}, plan_finish_date = #{planFinishDate},
+            total_qty = #{totalQty}, completed_qty = #{completedQty}, order_status = #{orderStatus},
+            update_by = #{updateBy}, update_time = sysdate(), remark = #{remark}
+        where production_order_id = #{productionOrderId}
+          and order_status = '草稿'
+    </update>
+
+    <update id="updateProductionOrderRelease" parameterType="ErpProductionOrder">
+        update erp_production_order
+        set order_status = '已下达', audit_by = #{auditBy}, audit_time = #{auditTime},
+            update_by = #{updateBy}, update_time = sysdate()
+        where production_order_id = #{productionOrderId}
+          and order_status = '草稿'
+    </update>
+
+    <update id="updateProductionOrderFinish" parameterType="ErpProductionOrder">
+        update erp_production_order
+        set order_status = '已完成', completed_qty = total_qty, update_by = #{updateBy}, update_time = sysdate()
+        where production_order_id = #{productionOrderId}
+          and order_status in ('已下达', '裁剪中', '缝制中', '后整中')
+    </update>
+
+    <update id="updateProductionOrderClose" parameterType="ErpProductionOrder">
+        update erp_production_order
+        set order_status = '已关闭', update_by = #{updateBy}, update_time = sysdate()
+        where production_order_id = #{productionOrderId}
+          and order_status in ('草稿', '已下达', '裁剪中', '缝制中', '后整中')
+    </update>
+
+    <delete id="deleteProductionOrderByIds" parameterType="Long">
+        delete from erp_production_order where order_status = '草稿' and production_order_id in
+        <foreach collection="array" item="productionOrderId" open="(" separator="," close=")">#{productionOrderId}</foreach>
+    </delete>
+</mapper>

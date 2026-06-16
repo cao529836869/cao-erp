@@ -1,0 +1,1 @@
+mysql --default-character-set=utf8mb4 -uroot -p ry-vue -e "source D:/project/RuoYi-Vue-master/sql/reset_erp_business_demo_data.sql"

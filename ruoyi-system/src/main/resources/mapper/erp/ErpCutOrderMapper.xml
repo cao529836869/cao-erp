@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpCutOrderMapper">
+
+    <resultMap type="ErpCutOrder" id="ErpCutOrderResult">
+        <id property="cutOrderId" column="cut_order_id"/>
+        <result property="cutOrderNo" column="cut_order_no"/>
+        <result property="productionOrderId" column="production_order_id"/>
+        <result property="productionOrderNo" column="production_order_no"/>
+        <result property="salesOrderId" column="sales_order_id"/>
+        <result property="salesOrderNo" column="sales_order_no"/>
+        <result property="customerId" column="customer_id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="planFinishTime" column="plan_finish_time"/>
+        <result property="finishTime" column="finish_time"/>
+        <result property="totalQty" column="total_qty"/>
+        <result property="actualCutQty" column="actual_cut_qty"/>
+        <result property="cutStatus" column="cut_status"/>
+        <result property="cutStatusName" column="cut_status_name"/>
+        <result property="timeoutFlag" column="timeout_flag"/>
+        <result property="itemSummary" column="item_summary"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectCutOrderVo">
+        select c.cut_order_id, c.cut_order_no, c.production_order_id, c.production_order_no,
+               c.sales_order_id, c.sales_order_no, c.customer_id, c.customer_name,
+               c.plan_finish_time, c.finish_time, c.total_qty, ifnull(d.actual_cut_qty, 0) as actual_cut_qty, c.cut_status,
+               case c.cut_status when 0 then '待裁剪' when 1 then '裁剪中' when 2 then '已完成' when 3 then '已取消' else '未知' end as cut_status_name,
+               case when c.cut_status in (0, 1) and c.plan_finish_time &lt; now() then 1 else 0 end as timeout_flag,
+               d.item_summary, c.create_by, c.create_time, c.update_by, c.update_time, c.remark
+        from erp_cut_order c
+        left join (
+            select cut_order_id,
+                   sum(ifnull(cut_qty, 0)) as actual_cut_qty,
+                   group_concat(concat_ws(' / ', style_no, style_name, color_name, size_name, plan_qty)
+                                order by cut_detail_id separator '; ') as item_summary
+            from erp_cut_order_detail
+            group by cut_order_id
+        ) d on d.cut_order_id = c.cut_order_id
+    </sql>
+
+    <select id="selectCutOrderList" parameterType="ErpCutOrder" resultMap="ErpCutOrderResult">
+        <include refid="selectCutOrderVo"/>
+        <where>
+            <if test="cutOrderNo != null and cutOrderNo != ''">and c.cut_order_no like concat('%', #{cutOrderNo}, '%')</if>
+            <if test="productionOrderNo != null and productionOrderNo != ''">and c.production_order_no like concat('%', #{productionOrderNo}, '%')</if>
+            <if test="salesOrderNo != null and salesOrderNo != ''">and c.sales_order_no like concat('%', #{salesOrderNo}, '%')</if>
+            <if test="customerName != null and customerName != ''">and c.customer_name like concat('%', #{customerName}, '%')</if>
+            <if test="cutStatus != null">and c.cut_status = #{cutStatus}</if>
+        </where>
+        order by timeout_flag desc, c.plan_finish_time asc, c.cut_order_id desc
+    </select>
+
+    <select id="selectCutOrderById" parameterType="Long" resultMap="ErpCutOrderResult">
+        <include refid="selectCutOrderVo"/>
+        where c.cut_order_id = #{cutOrderId}
+    </select>
+
+    <select id="selectCutOrderByProductionOrderId" parameterType="Long" resultMap="ErpCutOrderResult">
+        <include refid="selectCutOrderVo"/>
+        where c.production_order_id = #{productionOrderId} limit 1
+    </select>
+
+    <insert id="insertCutOrder" parameterType="ErpCutOrder" useGeneratedKeys="true" keyProperty="cutOrderId">
+        insert into erp_cut_order(cut_order_no, production_order_id, production_order_no, sales_order_id, sales_order_no,
+            customer_id, customer_name, plan_finish_time, finish_time, total_qty, cut_status, create_by, create_time, remark)
+        values(#{cutOrderNo}, #{productionOrderId}, #{productionOrderNo}, #{salesOrderId}, #{salesOrderNo},
+            #{customerId}, #{customerName}, #{planFinishTime}, #{finishTime}, #{totalQty}, #{cutStatus}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateCutOrder" parameterType="ErpCutOrder">
+        update erp_cut_order
+        set customer_id = #{customerId}, customer_name = #{customerName}, sales_order_id = #{salesOrderId},
+            sales_order_no = #{salesOrderNo}, plan_finish_time = #{planFinishTime}, total_qty = #{totalQty},
+            cut_status = #{cutStatus}, update_by = #{updateBy}, update_time = sysdate(), remark = #{remark}
+        where cut_order_id = #{cutOrderId}
+    </update>
+
+    <update id="updateCutStatus" parameterType="ErpCutOrder">
+        update erp_cut_order
+        set cut_status = #{cutStatus}, finish_time = #{finishTime}, update_by = #{updateBy}, update_time = sysdate()
+        where cut_order_id = #{cutOrderId}
+    </update>
+
+    <update id="delayCutOrder" parameterType="ErpCutOrder">
+        update erp_cut_order
+        set plan_finish_time = #{planFinishTime}, cut_status = 1, update_by = #{updateBy}, update_time = sysdate(), remark = #{remark}
+        where cut_order_id = #{cutOrderId}
+          and cut_status in (0, 1)
+    </update>
+
+    <delete id="deleteCutOrderByIds" parameterType="Long">
+        delete from erp_cut_order where cut_order_id in
+        <foreach collection="array" item="cutOrderId" open="(" separator="," close=")">#{cutOrderId}</foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpMaterialSkuMapper">
+
+    <resultMap type="ErpMaterialSku" id="ErpMaterialSkuResult">
+        <id     property="materialSkuId"    column="material_sku_id"    />
+        <result property="materialId"       column="material_id"        />
+        <result property="materialCode"     column="material_code"      />
+        <result property="materialName"     column="material_name"      />
+        <result property="materialType"     column="material_type"      />
+        <result property="materialSkuCode"  column="material_sku_code"  />
+        <result property="colorCode"        column="color_code"         />
+        <result property="colorName"        column="color_name"         />
+        <result property="specName"         column="spec_name"          />
+        <result property="widthValue"       column="width_value"        />
+        <result property="gramWeight"       column="gram_weight"        />
+        <result property="unitName"         column="unit_name"          />
+        <result property="barcode"          column="barcode"            />
+        <result property="status"           column="status"             />
+        <result property="delFlag"          column="del_flag"           />
+        <result property="createBy"         column="create_by"          />
+        <result property="createTime"       column="create_time"        />
+        <result property="updateBy"         column="update_by"          />
+        <result property="updateTime"       column="update_time"        />
+        <result property="remark"           column="remark"             />
+    </resultMap>
+
+    <select id="selectMaterialSkuById" parameterType="Long" resultMap="ErpMaterialSkuResult">
+        select s.material_sku_id, s.material_id, s.material_code, m.material_name, m.material_type,
+               s.material_sku_code, s.color_code, s.color_name, s.spec_name, s.width_value, s.gram_weight,
+               s.unit_name, s.barcode, s.status, s.del_flag, s.create_by, s.create_time,
+               s.update_by, s.update_time, s.remark
+        from erp_material_sku s
+        left join erp_material m on m.material_id = s.material_id
+        where s.material_sku_id = #{materialSkuId}
+          and s.del_flag = '0'
+        limit 1
+    </select>
+
+    <select id="selectMaterialSkuList" parameterType="ErpMaterialSku" resultMap="ErpMaterialSkuResult">
+        select s.material_sku_id, s.material_id, s.material_code, m.material_name, m.material_type,
+               s.material_sku_code, s.color_code, s.color_name, s.spec_name, s.width_value, s.gram_weight,
+               s.unit_name, s.barcode, s.status, s.del_flag, s.create_by, s.create_time,
+               s.update_by, s.update_time, s.remark
+        from erp_material_sku s
+        left join erp_material m on m.material_id = s.material_id
+        <where>
+            s.del_flag = '0'
+            and (s.status is null or s.status = '' or s.status = '0')
+            and (m.del_flag is null or m.del_flag = '0')
+            <if test="materialCode != null and materialCode != ''">
+                and s.material_code like concat('%', #{materialCode}, '%')
+            </if>
+            <if test="materialName != null and materialName != ''">
+                and m.material_name like concat('%', #{materialName}, '%')
+            </if>
+            <if test="materialSkuCode != null and materialSkuCode != ''">
+                and s.material_sku_code like concat('%', #{materialSkuCode}, '%')
+            </if>
+            <if test="colorName != null and colorName != ''">
+                and s.color_name like concat('%', #{colorName}, '%')
+            </if>
+            <if test="specName != null and specName != ''">
+                and s.spec_name like concat('%', #{specName}, '%')
+            </if>
+        </where>
+        order by s.material_sku_code asc
+    </select>
+
+    <select id="selectMaterialSkuByMaterialId" parameterType="Long" resultMap="ErpMaterialSkuResult">
+        select material_sku_id, material_id, material_code, material_sku_code, color_code, color_name,
+               spec_name, width_value, gram_weight, unit_name, barcode, status, del_flag,
+               create_by, create_time, update_by, update_time, remark
+        from erp_material_sku
+        where material_id = #{materialId}
+        order by material_sku_id asc
+    </select>
+
+    <insert id="batchInsertMaterialSku" parameterType="java.util.List">
+        insert into erp_material_sku(
+            material_id, material_code, material_sku_code, color_code, color_name, spec_name,
+            width_value, gram_weight, unit_name, barcode, status, del_flag,
+            create_by, create_time, update_by, update_time, remark
+        ) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.materialId}, #{item.materialCode}, #{item.materialSkuCode}, #{item.colorCode},
+             #{item.colorName}, #{item.specName}, #{item.widthValue}, #{item.gramWeight}, #{item.unitName},
+             #{item.barcode}, #{item.status}, #{item.delFlag}, #{item.createBy}, #{item.createTime},
+             #{item.updateBy}, #{item.updateTime}, #{item.remark})
+        </foreach>
+    </insert>
+
+    <update id="updateMaterialSku" parameterType="ErpMaterialSku">
+        update erp_material_sku
+        set material_code = #{materialCode},
+            material_sku_code = #{materialSkuCode},
+            color_code = #{colorCode},
+            color_name = #{colorName},
+            spec_name = #{specName},
+            width_value = #{widthValue},
+            gram_weight = #{gramWeight},
+            unit_name = #{unitName},
+            barcode = #{barcode},
+            status = #{status},
+            del_flag = #{delFlag},
+            update_by = #{updateBy},
+            update_time = #{updateTime},
+            remark = #{remark}
+        where material_sku_id = #{materialSkuId}
+          and material_id = #{materialId}
+    </update>
+
+    <delete id="deleteMaterialSkuByMaterialId" parameterType="Long">
+        delete from erp_material_sku where material_id = #{materialId}
+    </delete>
+
+    <delete id="deleteMaterialSkuByMaterialIds" parameterType="Long">
+        delete from erp_material_sku where material_id in
+        <foreach collection="array" item="materialId" open="(" separator="," close=")">
+            #{materialId}
+        </foreach>
+    </delete>
+
+    <delete id="deleteMaterialSkuBySkuIds" parameterType="Long">
+        delete from erp_material_sku where material_sku_id in
+        <foreach collection="array" item="materialSkuId" open="(" separator="," close=")">
+            #{materialSkuId}
+        </foreach>
+    </delete>
+
+    <select id="countBomDetailByMaterialIds" parameterType="Long" resultType="int">
+        select count(1) from erp_style_bom_detail where material_id in
+        <foreach collection="array" item="materialId" open="(" separator="," close=")">
+            #{materialId}
+        </foreach>
+    </select>
+
+    <select id="countBomDetailByMaterialSkuIds" parameterType="Long" resultType="int">
+        select count(1) from erp_style_bom_detail where material_sku_id in
+        <foreach collection="array" item="materialSkuId" open="(" separator="," close=")">
+            #{materialSkuId}
+        </foreach>
+    </select>
+</mapper>

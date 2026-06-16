@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpDeliveryOrderMapper">
+    <resultMap type="ErpDeliveryOrder" id="ErpDeliveryOrderResult">
+        <id property="deliveryOrderId" column="delivery_order_id"/>
+        <result property="deliveryOrderNo" column="delivery_order_no"/>
+        <result property="salesOrderId" column="sales_order_id"/>
+        <result property="salesOrderNo" column="sales_order_no"/>
+        <result property="customerId" column="customer_id"/>
+        <result property="customerName" column="customer_name"/>
+        <result property="warehouseId" column="warehouse_id"/>
+        <result property="warehouseName" column="warehouse_name"/>
+        <result property="deliveryDate" column="delivery_date"/>
+        <result property="totalQty" column="total_qty"/>
+        <result property="deliveryStatus" column="delivery_status"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <sql id="selectDeliveryOrderVo">
+        select delivery_order_id, delivery_order_no, sales_order_id, sales_order_no, customer_id, customer_name,
+               warehouse_id, warehouse_name, delivery_date, total_qty, delivery_status,
+               create_by, create_time, update_by, update_time, remark
+        from erp_delivery_order
+    </sql>
+
+    <select id="selectDeliveryOrderList" parameterType="ErpDeliveryOrder" resultMap="ErpDeliveryOrderResult">
+        <include refid="selectDeliveryOrderVo"/>
+        <where>
+            <if test="deliveryOrderNo != null and deliveryOrderNo != ''">and delivery_order_no like concat('%', #{deliveryOrderNo}, '%')</if>
+            <if test="salesOrderNo != null and salesOrderNo != ''">and sales_order_no like concat('%', #{salesOrderNo}, '%')</if>
+            <if test="customerName != null and customerName != ''">and customer_name like concat('%', #{customerName}, '%')</if>
+            <if test="deliveryStatus != null and deliveryStatus != ''">and delivery_status = #{deliveryStatus}</if>
+        </where>
+        order by delivery_date desc, delivery_order_id desc
+    </select>
+
+    <select id="selectDeliveryOrderById" parameterType="Long" resultMap="ErpDeliveryOrderResult">
+        <include refid="selectDeliveryOrderVo"/>
+        where delivery_order_id = #{deliveryOrderId}
+    </select>
+
+    <insert id="insertDeliveryOrder" parameterType="ErpDeliveryOrder" useGeneratedKeys="true" keyProperty="deliveryOrderId">
+        insert into erp_delivery_order(delivery_order_no, sales_order_id, sales_order_no, customer_id, customer_name,
+            warehouse_id, warehouse_name, delivery_date, total_qty, delivery_status, create_by, create_time, remark)
+        values(#{deliveryOrderNo}, #{salesOrderId}, #{salesOrderNo}, #{customerId}, #{customerName},
+            #{warehouseId}, #{warehouseName}, #{deliveryDate}, #{totalQty}, #{deliveryStatus}, #{createBy}, sysdate(), #{remark})
+    </insert>
+
+    <update id="updateDeliveryOrder" parameterType="ErpDeliveryOrder">
+        update erp_delivery_order
+        set sales_order_id = #{salesOrderId}, sales_order_no = #{salesOrderNo}, customer_id = #{customerId},
+            customer_name = #{customerName}, warehouse_id = #{warehouseId}, warehouse_name = #{warehouseName},
+            delivery_date = #{deliveryDate}, total_qty = #{totalQty}, delivery_status = #{deliveryStatus},
+            update_by = #{updateBy}, update_time = sysdate(), remark = #{remark}
+        where delivery_order_id = #{deliveryOrderId}
+    </update>
+
+    <delete id="deleteDeliveryOrderByIds" parameterType="Long">
+        delete from erp_delivery_order where delivery_order_id in
+        <foreach collection="array" item="deliveryOrderId" open="(" separator="," close=")">#{deliveryOrderId}</foreach>
+    </delete>
+</mapper>

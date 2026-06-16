@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpProductionOrderDetailMapper">
+
+    <resultMap type="ErpProductionOrderDetail" id="ErpProductionOrderDetailResult">
+        <id property="productionOrderDetailId" column="production_order_detail_id"/>
+        <result property="productionOrderId" column="production_order_id"/>
+        <result property="productionOrderNo" column="production_order_no"/>
+        <result property="styleId" column="style_id"/>
+        <result property="skuId" column="sku_id"/>
+        <result property="styleNo" column="style_no"/>
+        <result property="styleName" column="style_name"/>
+        <result property="colorName" column="color_name"/>
+        <result property="sizeName" column="size_name"/>
+        <result property="planQty" column="plan_qty"/>
+        <result property="cutQty" column="cut_qty"/>
+        <result property="sewnQty" column="sewn_qty"/>
+        <result property="finishedQty" column="finished_qty"/>
+        <result property="qualifiedQty" column="qualified_qty"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <select id="selectDetailByOrderId" parameterType="Long" resultMap="ErpProductionOrderDetailResult">
+        select production_order_detail_id, production_order_id, production_order_no, style_id, sku_id,
+               style_no, style_name, color_name, size_name, plan_qty, cut_qty, sewn_qty, finished_qty,
+               qualified_qty, create_by, create_time, update_by, update_time, remark
+        from erp_production_order_detail
+        where production_order_id = #{productionOrderId}
+        order by production_order_detail_id asc
+    </select>
+
+    <insert id="batchInsertDetail" parameterType="java.util.List">
+        insert into erp_production_order_detail(production_order_id, production_order_no, style_id, sku_id,
+            style_no, style_name, color_name, size_name, plan_qty, cut_qty, sewn_qty, finished_qty,
+            qualified_qty, create_by, create_time, remark)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.productionOrderId}, #{item.productionOrderNo}, #{item.styleId}, #{item.skuId},
+             #{item.styleNo}, #{item.styleName}, #{item.colorName}, #{item.sizeName}, #{item.planQty},
+             #{item.cutQty}, #{item.sewnQty}, #{item.finishedQty}, #{item.qualifiedQty},
+             #{item.createBy}, sysdate(), #{item.remark})
+        </foreach>
+    </insert>
+
+    <delete id="deleteDetailByOrderId" parameterType="Long">
+        delete from erp_production_order_detail where production_order_id = #{productionOrderId}
+    </delete>
+
+    <delete id="deleteDetailByOrderIds" parameterType="Long">
+        delete from erp_production_order_detail where production_order_id in
+        <foreach collection="array" item="productionOrderId" open="(" separator="," close=")">#{productionOrderId}</foreach>
+    </delete>
+</mapper>

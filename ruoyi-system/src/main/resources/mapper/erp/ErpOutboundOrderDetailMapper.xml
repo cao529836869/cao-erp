@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpOutboundOrderDetailMapper">
+
+    <resultMap type="ErpOutboundOrderDetail" id="ErpOutboundOrderDetailResult">
+        <id property="outboundDetailId" column="outbound_detail_id"/>
+        <result property="outboundOrderId" column="outbound_order_id"/>
+        <result property="outboundOrderNo" column="outbound_order_no"/>
+        <result property="sourceDetailId" column="source_detail_id"/>
+        <result property="itemType" column="item_type"/>
+        <result property="itemId" column="item_id"/>
+        <result property="itemCode" column="item_code"/>
+        <result property="itemName" column="item_name"/>
+        <result property="colorName" column="color_name"/>
+        <result property="sizeName" column="size_name"/>
+        <result property="specName" column="spec_name"/>
+        <result property="batchNo" column="batch_no"/>
+        <result property="locationCode" column="location_code"/>
+        <result property="planQty" column="plan_qty"/>
+        <result property="lockedQty" column="locked_qty"/>
+        <result property="outboundQty" column="outbound_qty"/>
+        <result property="unitName" column="unit_name"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="amount" column="amount"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <select id="selectDetailByOrderId" parameterType="Long" resultMap="ErpOutboundOrderDetailResult">
+        select outbound_detail_id, outbound_order_id, outbound_order_no, source_detail_id, item_type, item_id,
+               item_code, item_name, color_name, size_name, spec_name, batch_no, location_code,
+               plan_qty, locked_qty, outbound_qty, unit_name, unit_price, amount, remark
+        from erp_outbound_order_detail
+        where outbound_order_id = #{outboundOrderId}
+        order by outbound_detail_id asc
+    </select>
+
+    <insert id="batchInsertDetail" parameterType="java.util.List">
+        insert into erp_outbound_order_detail(outbound_order_id, outbound_order_no, source_detail_id, item_type, item_id,
+            item_code, item_name, color_name, size_name, spec_name, batch_no, location_code, plan_qty, locked_qty,
+            outbound_qty, unit_name, unit_price, amount, create_by, create_time, remark)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.outboundOrderId}, #{item.outboundOrderNo}, #{item.sourceDetailId}, #{item.itemType}, #{item.itemId},
+             #{item.itemCode}, #{item.itemName}, #{item.colorName}, #{item.sizeName}, #{item.specName}, #{item.batchNo},
+             #{item.locationCode}, #{item.planQty}, #{item.lockedQty}, #{item.outboundQty}, #{item.unitName},
+             #{item.unitPrice}, #{item.amount}, #{item.createBy}, sysdate(), #{item.remark})
+        </foreach>
+    </insert>
+
+    <delete id="deleteDetailByOrderId" parameterType="Long">
+        delete from erp_outbound_order_detail where outbound_order_id = #{outboundOrderId}
+    </delete>
+
+    <delete id="deleteDetailByOrderIds" parameterType="Long">
+        delete from erp_outbound_order_detail where outbound_order_id in
+        <foreach collection="array" item="outboundOrderId" open="(" separator="," close=")">#{outboundOrderId}</foreach>
+    </delete>
+</mapper>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpSalesOrderDetailMapper">
+    <resultMap type="ErpSalesOrderDetail" id="ErpSalesOrderDetailResult">
+        <id property="salesDetailId" column="sales_order_detail_id"/>
+        <result property="salesOrderId" column="sales_order_id"/>
+        <result property="salesOrderNo" column="sales_order_no"/>
+        <result property="styleId" column="style_id"/>
+        <result property="skuId" column="sku_id"/>
+        <result property="skuCode" column="sku_code"/>
+        <result property="styleNo" column="style_no"/>
+        <result property="styleName" column="style_name"/>
+        <result property="colorName" column="color_name"/>
+        <result property="sizeName" column="size_name"/>
+        <result property="orderQty" column="order_qty"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="amount" column="amount"/>
+    </resultMap>
+
+    <select id="selectDetailByOrderId" parameterType="Long" resultMap="ErpSalesOrderDetailResult">
+        select sales_order_detail_id, sales_order_id, sales_order_no, style_id, sku_id, sku_code,
+               style_no, style_name, color_name, size_name, order_qty, unit_price, amount
+        from erp_sales_order_detail
+        where sales_order_id = #{salesOrderId}
+        order by sales_order_detail_id asc
+    </select>
+
+    <insert id="batchInsertDetail" parameterType="java.util.List">
+        insert into erp_sales_order_detail(sales_order_id, sales_order_no, style_id, sku_id, sku_code,
+            style_no, style_name, color_name, size_name, order_qty, unit_price, amount, create_by, create_time, remark)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.salesOrderId}, #{item.salesOrderNo}, #{item.styleId}, #{item.skuId}, #{item.skuCode},
+             #{item.styleNo}, #{item.styleName}, #{item.colorName}, #{item.sizeName}, #{item.orderQty},
+             #{item.unitPrice}, #{item.amount}, #{item.createBy}, sysdate(), #{item.remark})
+        </foreach>
+    </insert>
+
+    <delete id="deleteDetailByOrderId" parameterType="Long">
+        delete from erp_sales_order_detail where sales_order_id = #{salesOrderId}
+    </delete>
+
+    <delete id="deleteDetailByOrderIds" parameterType="Long">
+        delete from erp_sales_order_detail where sales_order_id in
+        <foreach collection="array" item="salesOrderId" open="(" separator="," close=")">#{salesOrderId}</foreach>
+    </delete>
+</mapper>

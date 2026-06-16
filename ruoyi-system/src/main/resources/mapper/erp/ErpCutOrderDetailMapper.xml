@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpCutOrderDetailMapper">
+    <resultMap type="ErpCutOrderDetail" id="ErpCutOrderDetailResult">
+        <id property="cutDetailId" column="cut_detail_id"/>
+        <result property="cutOrderId" column="cut_order_id"/>
+        <result property="cutOrderNo" column="cut_order_no"/>
+        <result property="productionOrderDetailId" column="production_order_detail_id"/>
+        <result property="styleId" column="style_id"/>
+        <result property="skuId" column="sku_id"/>
+        <result property="styleNo" column="style_no"/>
+        <result property="styleName" column="style_name"/>
+        <result property="colorName" column="color_name"/>
+        <result property="sizeName" column="size_name"/>
+        <result property="planQty" column="plan_qty"/>
+        <result property="cutQty" column="cut_qty"/>
+    </resultMap>
+
+    <select id="selectDetailByOrderId" parameterType="Long" resultMap="ErpCutOrderDetailResult">
+        select cut_detail_id, cut_order_id, cut_order_no, production_order_detail_id, style_id, sku_id,
+               style_no, style_name, color_name, size_name, plan_qty, cut_qty
+        from erp_cut_order_detail
+        where cut_order_id = #{cutOrderId}
+        order by cut_detail_id asc
+    </select>
+
+    <insert id="batchInsertDetail" parameterType="java.util.List">
+        insert into erp_cut_order_detail(cut_order_id, cut_order_no, production_order_detail_id, style_id, sku_id,
+            style_no, style_name, color_name, size_name, plan_qty, cut_qty, create_by, create_time, remark)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.cutOrderId}, #{item.cutOrderNo}, #{item.productionOrderDetailId}, #{item.styleId}, #{item.skuId},
+             #{item.styleNo}, #{item.styleName}, #{item.colorName}, #{item.sizeName}, #{item.planQty}, #{item.cutQty},
+             #{item.createBy}, sysdate(), #{item.remark})
+        </foreach>
+    </insert>
+
+    <update id="updateCutQty" parameterType="ErpCutOrderDetail">
+        update erp_cut_order_detail
+        set cut_qty = #{cutQty}
+        where cut_detail_id = #{cutDetailId}
+    </update>
+
+    <delete id="deleteDetailByOrderId" parameterType="Long">
+        delete from erp_cut_order_detail where cut_order_id = #{cutOrderId}
+    </delete>
+
+    <delete id="deleteDetailByOrderIds" parameterType="Long">
+        delete from erp_cut_order_detail where cut_order_id in
+        <foreach collection="array" item="cutOrderId" open="(" separator="," close=")">#{cutOrderId}</foreach>
+    </delete>
+</mapper>

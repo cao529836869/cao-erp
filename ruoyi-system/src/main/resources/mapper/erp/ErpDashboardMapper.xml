@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpDashboardMapper">
+
+    <select id="selectSummary" resultType="java.util.HashMap">
+        select
+            ifnull((select sum(ifnull(in_qty, 0)) from erp_inventory_transaction where date(transaction_time) = curdate()), 0) as todayInboundQty,
+            ifnull((select sum(ifnull(out_qty, 0)) from erp_inventory_transaction where date(transaction_time) = curdate()), 0) as todayOutboundQty,
+            ifnull((select count(1) from erp_production_order where ifnull(order_status, '') not in ('已完成', '已关闭', '已取消', '已作废')), 0) as activeProductionCount,
+            ifnull((select sum(ifnull(available_qty, 0) * ifnull(unit_price, 0)) from erp_inventory), 0) as inventoryValue,
+            ifnull((select count(1) from erp_cut_order where cut_status in (0, 1) and plan_finish_time &lt; now()), 0) as overdueCutCount,
+            ifnull((select count(1) from erp_inbound_order where ifnull(order_status, '') in ('草稿', '已审核')), 0) as pendingInboundCount,
+            ifnull((select count(1) from erp_outbound_order where ifnull(order_status, '') in ('草稿', '已审核', '已拣货')), 0) as pendingOutboundCount,
+            ifnull((select sum(ifnull(total_amount, 0)) from erp_sales_order where ifnull(order_status, '') not in ('已完成', '已关闭', '已取消', '已作废')), 0) as openSalesAmount,
+            ifnull((select sum(ifnull(available_qty, 0)) from erp_inventory where item_type = '成衣'), 0) as finishedGoodsQty
+    </select>
+
+    <select id="selectWeeklyFlow" resultType="java.util.HashMap">
+        select date_format(d.day, '%m-%d') as name,
+               ifnull(sum(t.in_qty), 0) as inboundQty,
+               ifnull(sum(t.out_qty), 0) as outboundQty
+        from (
+            select curdate() - interval 6 day as day union all
+            select curdate() - interval 5 day union all
+            select curdate() - interval 4 day union all
+            select curdate() - interval 3 day union all
+            select curdate() - interval 2 day union all
+            select curdate() - interval 1 day union all
+            select curdate() as day
+        ) d
+        left join erp_inventory_transaction t on date(t.transaction_time) = d.day
+        group by d.day
+        order by d.day
+    </select>
+
+    <select id="selectProductionStatus" resultType="java.util.HashMap">
+        select ifnull(order_status, '未设置') as name, count(1) as value
+        from erp_production_order
+        group by ifnull(order_status, '未设置')
+        order by value desc
+        limit 8
+    </select>
+
+    <select id="selectMaterialAlerts" resultType="java.util.HashMap">
+        select m.material_code as materialCode,
+               m.material_name as materialName,
+               m.unit_name as unitName,
+               ifnull(inv.currentQty, 0) as currentQty,
+               ifnull(m.safe_stock_qty, 0) as safeQty,
+               case when ifnull(m.safe_stock_qty, 0) = 0 then 100
+                    else round(ifnull(inv.currentQty, 0) / m.safe_stock_qty * 100, 0)
+               end as percent
+        from erp_material m
+        left join (
+            select ms.material_id, sum(ifnull(i.available_qty, 0) + ifnull(i.locked_qty, 0)) as currentQty
+            from erp_material_sku ms
+            left join erp_inventory i on i.item_id = ms.material_sku_id and i.item_type = '物料'
+            group by ms.material_id
+        ) inv on inv.material_id = m.material_id
+        where m.del_flag = '0'
+          and ifnull(m.safe_stock_qty, 0) &gt; 0
+          and ifnull(inv.currentQty, 0) &lt; ifnull(m.safe_stock_qty, 0)
+        order by percent asc, m.material_id desc
+        limit 6
+    </select>
+
+    <select id="selectRecentSalesOrders" resultType="java.util.HashMap">
+        select s.sales_order_no as salesOrderNo,
+               s.customer_name as customerName,
+               s.delivery_date as deliveryDate,
+               ifnull(s.total_qty, 0) as totalQty,
+               ifnull(s.total_amount, 0) as totalAmount,
+               ifnull(s.order_status, '') as orderStatus,
+               ifnull(d.itemSummary, '') as itemSummary
+        from erp_sales_order s
+        left join (
+            select sales_order_id,
+                   group_concat(concat_ws(' / ', style_no, style_name, color_name, size_name, order_qty)
+                                order by sales_order_detail_id separator '; ') as itemSummary
+            from erp_sales_order_detail
+            group by sales_order_id
+        ) d on d.sales_order_id = s.sales_order_id
+        order by s.order_date desc, s.sales_order_id desc
+        limit 6
+    </select>
+
+    <select id="selectSchedule" resultType="java.util.HashMap">
+        select *
+        from (
+            select '生产' as module,
+                   production_order_no as orderNo,
+                   customer_name as customerName,
+                   plan_finish_date as planDate,
+                   ifnull(total_qty, 0) as totalQty,
+                   ifnull(completed_qty, 0) as completedQty,
+                   ifnull(order_status, '') as status,
+                   case when ifnull(total_qty, 0) = 0 then 0 else round(ifnull(completed_qty, 0) / total_qty * 100, 0) end as progress
+            from erp_production_order
+            where plan_finish_date is not null
+              and plan_finish_date &gt;= curdate() - interval 1 day
+              and ifnull(order_status, '') not in ('已完成', '已关闭', '已取消', '已作废')
+            union all
+            select '裁剪' as module,
+                   cut_order_no as orderNo,
+                   customer_name as customerName,
+                   date(plan_finish_time) as planDate,
+                   ifnull(total_qty, 0) as totalQty,
+                   0 as completedQty,
+                   case cut_status when 0 then '待裁剪' when 1 then '裁剪中' when 2 then '已完成' when 3 then '已取消' else '未知' end as status,
+                   case when cut_status = 2 then 100 when cut_status = 1 then 50 else 0 end as progress
+            from erp_cut_order
+            where plan_finish_time is not null
+              and date(plan_finish_time) &gt;= curdate() - interval 1 day
+              and cut_status in (0, 1)
+        ) s
+        order by planDate asc
+        limit 8
+    </select>
+
+    <select id="selectWarehouseStock" resultType="java.util.HashMap">
+        select warehouse_name as warehouseName,
+               sum(ifnull(available_qty, 0)) as availableQty,
+               sum(ifnull(locked_qty, 0)) as lockedQty,
+               sum(ifnull(available_qty, 0) * ifnull(unit_price, 0)) as stockAmount
+        from erp_inventory
+        group by warehouse_name
+        order by stockAmount desc, availableQty desc
+        limit 8
+    </select>
+</mapper>
