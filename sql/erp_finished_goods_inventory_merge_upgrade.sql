@@ -13,6 +13,7 @@ SELECT
     max(color_name) AS color_name,
     max(size_name) AS size_name,
     max(spec_name) AS spec_name,
+    min(batch_no) AS batch_no,
     sum(ifnull(available_qty, 0)) AS available_qty,
     sum(ifnull(locked_qty, 0)) AS locked_qty,
     max(unit_price) AS unit_price,
@@ -33,7 +34,7 @@ INSERT INTO erp_inventory (
 )
 SELECT
     warehouse_id, warehouse_name, item_type, item_id, item_code, item_name,
-    color_name, size_name, spec_name, '', available_qty, locked_qty,
+    color_name, size_name, spec_name, ifnull(batch_no, ''), available_qty, locked_qty,
     unit_price, unit_name, update_time, remark
 FROM tmp_finished_goods_inventory;
 

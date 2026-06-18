@@ -51,6 +51,16 @@
         for update
     </select>
 
+    <select id="selectFinishedGoodsInventoryForUpdate" resultMap="ErpInventoryResult">
+        <include refid="selectInventoryVo"/>
+        where warehouse_id = #{warehouseId}
+          and item_type = #{itemType}
+          and item_id = #{itemId}
+        order by inventory_id asc
+        limit 1
+        for update
+    </select>
+
     <insert id="insertInventory" parameterType="ErpInventory" useGeneratedKeys="true" keyProperty="inventoryId">
         insert into erp_inventory(warehouse_id, warehouse_name, item_type, item_id, item_code, item_name,
             color_name, size_name, spec_name, batch_no, available_qty, locked_qty, unit_price, unit_name, update_time, remark)

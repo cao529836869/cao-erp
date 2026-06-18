@@ -129,14 +129,14 @@ public class ErpInboundOrderServiceImpl implements IErpInboundOrderService
             {
                 throw new ServiceException("入库数量必须大于0");
             }
-            String batchNo = normalizeInventoryBatchNo(detail);
-            ErpInventory inventory = inventoryMapper.selectInventoryForUpdate(order.getWarehouseId(), detail.getItemType(), detail.getItemId(), batchNo);
+            String batchNo = StringUtils.defaultString(detail.getBatchNo());
+            ErpInventory inventory = selectInventoryForInboundUpdate(order.getWarehouseId(), detail);
             BigDecimal balanceQty;
             if (inventory == null)
             {
                 inventory = buildInventory(order, detail, qty);
                 inventoryMapper.insertOrIncreaseInventory(inventory);
-                inventory = inventoryMapper.selectInventoryForUpdate(order.getWarehouseId(), detail.getItemType(), detail.getItemId(), batchNo);
+                inventory = selectInventoryForInboundUpdate(order.getWarehouseId(), detail);
                 if (inventory == null)
                 {
                     throw new ServiceException("库存写入失败：" + detail.getItemCode());
@@ -191,8 +191,8 @@ public class ErpInboundOrderServiceImpl implements IErpInboundOrderService
             {
                 throw new ServiceException("入库数量必须大于0");
             }
-            String batchNo = normalizeInventoryBatchNo(detail);
-            ErpInventory inventory = inventoryMapper.selectInventoryForUpdate(order.getWarehouseId(), detail.getItemType(), detail.getItemId(), batchNo);
+            String batchNo = StringUtils.defaultString(detail.getBatchNo());
+            ErpInventory inventory = selectInventoryForInboundUpdate(order.getWarehouseId(), detail);
             if (inventory == null || nvl(inventory.getAvailableQty()).compareTo(qty) < 0)
             {
                 throw new ServiceException("取消过账失败，库存已被后续业务占用：" + detail.getItemCode() + " 批次 " + batchNo);
@@ -290,7 +290,7 @@ public class ErpInboundOrderServiceImpl implements IErpInboundOrderService
         inventory.setColorName(detail.getColorName());
         inventory.setSizeName(detail.getSizeName());
         inventory.setSpecName(detail.getSpecName());
-        inventory.setBatchNo(normalizeInventoryBatchNo(detail));
+        inventory.setBatchNo(StringUtils.defaultString(detail.getBatchNo()));
         inventory.setAvailableQty(qty);
         inventory.setLockedQty(BigDecimal.ZERO);
         inventory.setUnitPrice(nvl(detail.getUnitPrice()));
@@ -322,7 +322,7 @@ public class ErpInboundOrderServiceImpl implements IErpInboundOrderService
         transaction.setItemId(detail.getItemId());
         transaction.setItemCode(detail.getItemCode());
         transaction.setItemName(detail.getItemName());
-        transaction.setBatchNo(normalizeInventoryBatchNo(detail));
+        transaction.setBatchNo(StringUtils.defaultString(detail.getBatchNo()));
         transaction.setInQty(inQty);
         transaction.setOutQty(outQty);
         transaction.setBalanceQty(balanceQty);
@@ -339,12 +339,12 @@ public class ErpInboundOrderServiceImpl implements IErpInboundOrderService
         return value == null ? BigDecimal.ZERO : value;
     }
 
-    private String normalizeInventoryBatchNo(ErpInboundOrderDetail detail)
+    private ErpInventory selectInventoryForInboundUpdate(Long warehouseId, ErpInboundOrderDetail detail)
     {
         if ("成衣".equals(detail.getItemType()))
         {
-            return "";
+            return inventoryMapper.selectFinishedGoodsInventoryForUpdate(warehouseId, detail.getItemType(), detail.getItemId());
         }
-        return StringUtils.defaultString(detail.getBatchNo());
+        return inventoryMapper.selectInventoryForUpdate(warehouseId, detail.getItemType(), detail.getItemId(), StringUtils.defaultString(detail.getBatchNo()));
     }
 }
