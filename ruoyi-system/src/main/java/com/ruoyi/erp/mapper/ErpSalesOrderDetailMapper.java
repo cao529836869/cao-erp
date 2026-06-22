@@ -5,6 +5,7 @@ import com.ruoyi.erp.domain.ErpSalesOrderDetail;
 
 public interface ErpSalesOrderDetailMapper
 {
+    public ErpSalesOrderDetail selectDetailById(Long salesDetailId);
     public List<ErpSalesOrderDetail> selectDetailByOrderId(Long salesOrderId);
     public int batchInsertDetail(List<ErpSalesOrderDetail> detailList);
     public int deleteDetailByOrderId(Long salesOrderId);

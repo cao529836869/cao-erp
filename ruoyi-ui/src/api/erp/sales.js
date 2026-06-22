@@ -19,3 +19,7 @@ export function updateSales(data) {
 export function delSales(salesOrderId) {
   return request({ url: '/erp/sales/' + salesOrderId, method: 'delete' })
 }
+
+export function generateProduction(salesOrderId) {
+  return request({ url: '/erp/sales/production/' + salesOrderId, method: 'post' })
+}

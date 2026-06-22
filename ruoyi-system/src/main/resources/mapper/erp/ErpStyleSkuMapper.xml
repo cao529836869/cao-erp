@@ -50,6 +50,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by sku_id asc
     </select>
 
+    <select id="selectErpStyleSkuBySkuCode" parameterType="String" resultMap="ErpStyleSkuResult">
+        select s.sku_id, s.style_id, s.style_no, s.sku_code, s.color_code, s.color_name, s.size_code, s.size_name,
+               s.barcode, s.retail_price, s.status, s.del_flag, s.create_by, s.create_time, s.update_by, s.update_time,
+               s.remark, st.style_name
+        from erp_style_sku s
+        left join erp_style st on st.style_id = s.style_id
+        where s.del_flag = '0' and s.status = '0' and s.sku_code = #{skuCode}
+        limit 1
+    </select>
+
     <insert id="batchInsertErpStyleSku" parameterType="java.util.List">
         insert into erp_style_sku
             (style_id, style_no, sku_code, color_code, color_name, size_code, size_name,

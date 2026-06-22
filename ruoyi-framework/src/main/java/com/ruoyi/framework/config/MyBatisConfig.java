@@ -113,12 +113,18 @@ public class MyBatisConfig
         return resources.toArray(new Resource[resources.size()]);
     }
 
+    private String getMyBatisProperty(String camelCaseName, String kebabCaseName)
+    {
+        String value = env.getProperty("mybatis." + camelCaseName);
+        return StringUtils.isNotEmpty(value) ? value : env.getProperty("mybatis." + kebabCaseName);
+    }
+
     @Bean
     public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception
     {
-        String typeAliasesPackage = env.getProperty("mybatis.typeAliasesPackage");
-        String mapperLocations = env.getProperty("mybatis.mapperLocations");
-        String configLocation = env.getProperty("mybatis.configLocation");
+        String typeAliasesPackage = getMyBatisProperty("typeAliasesPackage", "type-aliases-package");
+        String mapperLocations = getMyBatisProperty("mapperLocations", "mapper-locations");
+        String configLocation = getMyBatisProperty("configLocation", "config-location");
         typeAliasesPackage = setTypeAliasesPackage(typeAliasesPackage);
         VFS.addImplClass(SpringBootVFS.class);
 

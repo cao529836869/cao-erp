@@ -61,6 +61,12 @@
         for update
     </select>
 
+    <select id="selectInventoryByIdForUpdate" parameterType="Long" resultMap="ErpInventoryResult">
+        <include refid="selectInventoryVo"/>
+        where inventory_id = #{inventoryId}
+        for update
+    </select>
+
     <insert id="insertInventory" parameterType="ErpInventory" useGeneratedKeys="true" keyProperty="inventoryId">
         insert into erp_inventory(warehouse_id, warehouse_name, item_type, item_id, item_code, item_name,
             color_name, size_name, spec_name, batch_no, available_qty, locked_qty, unit_price, unit_name, update_time, remark)
@@ -101,5 +107,37 @@
         set available_qty = ifnull(available_qty, 0) - #{qty}, update_time = sysdate()
         where inventory_id = #{inventoryId}
           and ifnull(available_qty, 0) &gt;= #{qty}
+    </update>
+
+    <update id="increaseLockedQty">
+        update erp_inventory
+        set locked_qty = ifnull(locked_qty, 0) + #{qty}, update_time = sysdate()
+        where inventory_id = #{inventoryId}
+          and ifnull(available_qty, 0) - ifnull(locked_qty, 0) &gt;= #{qty}
+    </update>
+
+    <update id="decreaseLockedQty">
+        update erp_inventory
+        set locked_qty = ifnull(locked_qty, 0) - #{qty}, update_time = sysdate()
+        where inventory_id = #{inventoryId}
+          and ifnull(locked_qty, 0) &gt;= #{qty}
+    </update>
+
+    <update id="decreaseAvailableAndLockedQty">
+        update erp_inventory
+        set available_qty = ifnull(available_qty, 0) - #{availableQty},
+            locked_qty = ifnull(locked_qty, 0) - #{lockedQty},
+            update_time = sysdate()
+        where inventory_id = #{inventoryId}
+          and ifnull(available_qty, 0) &gt;= #{availableQty}
+          and ifnull(locked_qty, 0) &gt;= #{lockedQty}
+    </update>
+
+    <update id="increaseAvailableAndLockedQty">
+        update erp_inventory
+        set available_qty = ifnull(available_qty, 0) + #{availableQty},
+            locked_qty = ifnull(locked_qty, 0) + #{lockedQty},
+            update_time = sysdate()
+        where inventory_id = #{inventoryId}
     </update>
 </mapper>

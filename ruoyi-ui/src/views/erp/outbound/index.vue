@@ -2,6 +2,7 @@
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" size="small" :inline="true" v-show="showSearch" label-width="80px">
       <el-form-item label="出库单号"><el-input v-model="queryParams.outboundOrderNo" clearable @keyup.enter.native="handleQuery" /></el-form-item>
+      <el-form-item label="来源单号"><el-input v-model="queryParams.sourceNo" clearable @keyup.enter.native="handleQuery" /></el-form-item>
       <el-form-item label="出库类型"><el-select v-model="queryParams.outboundType" clearable><el-option v-for="item in outboundTypes" :key="item" :label="item" :value="item" /></el-select></el-form-item>
       <el-form-item label="状态"><el-select v-model="queryParams.orderStatus" clearable><el-option v-for="item in statuses" :key="item" :label="item" :value="item" /></el-select></el-form-item>
       <el-form-item><el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button><el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button></el-form-item>
@@ -127,7 +128,7 @@ export default {
     return {
       loading: true, ids: [], single: true, multiple: true, showSearch: true, total: 0, open: false, title: "",
       orderList: [], warehouseOptions: [], outboundTypes: ["销售出库", "生产领料", "采购退货", "盘亏出库", "其他出库"], statuses: ["草稿", "已审核", "已拣货", "已出库", "已完成", "已取消", "已作废"],
-      queryParams: { pageNum: 1, pageSize: 10, outboundOrderNo: undefined, outboundType: undefined, orderStatus: undefined },
+      queryParams: { pageNum: 1, pageSize: 10, outboundOrderNo: undefined, sourceNo: undefined, outboundType: undefined, orderStatus: undefined },
       form: {}, rules: { outboundType: [{ required: true, message: "出库类型不能为空", trigger: "change" }], outboundDate: [{ required: true, message: "出库日期不能为空", trigger: "change" }], warehouseId: [{ required: true, message: "仓库不能为空", trigger: "change" }] },
       skuOpen: false, skuLoading: false, skuList: [], skuTotal: 0, skuRowIndex: -1, skuQuery: { pageNum: 1, pageSize: 10, materialSkuCode: undefined, materialName: undefined },
       batchOptionsCache: {}

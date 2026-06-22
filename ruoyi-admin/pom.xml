@@ -60,6 +60,11 @@
             <artifactId>ruoyi-workflow</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.ruoyi</groupId>
+            <artifactId>ruoyi-ai</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

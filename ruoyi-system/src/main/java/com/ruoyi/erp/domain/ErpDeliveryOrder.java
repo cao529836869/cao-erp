@@ -2,6 +2,7 @@ package com.ruoyi.erp.domain;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.ruoyi.common.annotation.Excel;
 import com.ruoyi.common.core.domain.BaseEntity;
@@ -29,6 +30,13 @@ public class ErpDeliveryOrder extends BaseEntity
     private BigDecimal totalQty;
     @Excel(name = "状态")
     private String deliveryStatus;
+    @Excel(name = "物流公司")
+    private String logisticsCompany;
+    @Excel(name = "物流单号")
+    private String trackingNo;
+    private Long outboundOrderId;
+    private String outboundOrderNo;
+    private List<ErpDeliveryOrderDetail> detailList;
 
     public Long getDeliveryOrderId() { return deliveryOrderId; }
     public void setDeliveryOrderId(Long deliveryOrderId) { this.deliveryOrderId = deliveryOrderId; }
@@ -52,4 +60,14 @@ public class ErpDeliveryOrder extends BaseEntity
     public void setTotalQty(BigDecimal totalQty) { this.totalQty = totalQty; }
     public String getDeliveryStatus() { return deliveryStatus; }
     public void setDeliveryStatus(String deliveryStatus) { this.deliveryStatus = deliveryStatus; }
+    public String getLogisticsCompany() { return logisticsCompany; }
+    public void setLogisticsCompany(String logisticsCompany) { this.logisticsCompany = logisticsCompany; }
+    public String getTrackingNo() { return trackingNo; }
+    public void setTrackingNo(String trackingNo) { this.trackingNo = trackingNo; }
+    public Long getOutboundOrderId() { return outboundOrderId; }
+    public void setOutboundOrderId(Long outboundOrderId) { this.outboundOrderId = outboundOrderId; }
+    public String getOutboundOrderNo() { return outboundOrderNo; }
+    public void setOutboundOrderNo(String outboundOrderNo) { this.outboundOrderNo = outboundOrderNo; }
+    public List<ErpDeliveryOrderDetail> getDetailList() { return detailList; }
+    public void setDetailList(List<ErpDeliveryOrderDetail> detailList) { this.detailList = detailList; }
 }

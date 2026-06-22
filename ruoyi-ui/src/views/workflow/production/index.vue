@@ -1,12 +1,6 @@
 <template>
   <div class="app-container workflow-production">
     <el-form :model="startForm" ref="startForm" size="small" :inline="true" label-width="100px" class="mb8">
-      <el-form-item label="领料处理人">
-        <el-input v-model="startForm.pickingAssignee" clearable placeholder="默认当前用户" />
-      </el-form-item>
-      <el-form-item label="裁剪处理人">
-        <el-input v-model="startForm.cuttingAssignee" clearable placeholder="默认当前用户" />
-      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-s-promotion" size="mini" @click="openProductionDialog" v-hasPermi="['workflow:production:start']">发起流程</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="getList">刷新待办</el-button>
@@ -194,10 +188,7 @@ export default {
         customerName: undefined,
         orderStatus: '草稿'
       },
-      startForm: {
-        pickingAssignee: undefined,
-        cuttingAssignee: undefined
-      },
+      startForm: {},
       cutOpen: false,
       cutLoading: false,
       cutSubmitting: false,

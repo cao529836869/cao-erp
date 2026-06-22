@@ -25,6 +25,13 @@
         order by sales_order_detail_id asc
     </select>
 
+    <select id="selectDetailById" parameterType="Long" resultMap="ErpSalesOrderDetailResult">
+        select sales_order_detail_id, sales_order_id, sales_order_no, style_id, sku_id, sku_code,
+               style_no, style_name, color_name, size_name, order_qty, unit_price, amount
+        from erp_sales_order_detail
+        where sales_order_detail_id = #{salesDetailId}
+    </select>
+
     <insert id="batchInsertDetail" parameterType="java.util.List">
         insert into erp_sales_order_detail(sales_order_id, sales_order_no, style_id, sku_id, sku_code,
             style_no, style_name, color_name, size_name, order_qty, unit_price, amount, create_by, create_time, remark)

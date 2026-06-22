@@ -103,6 +103,10 @@ create table if not exists erp_delivery_order (
   delivery_date     date            default null            comment '发货日期',
   total_qty         decimal(14,3)   default 0.000           comment '发货数量',
   delivery_status   varchar(20)     default '草稿'          comment '发货状态',
+  logistics_company varchar(100)    default null            comment '物流公司',
+  tracking_no       varchar(100)    default null            comment '物流单号',
+  outbound_order_id bigint(20)      default null            comment '出库单ID',
+  outbound_order_no varchar(40)     default null            comment '出库单编号',
   create_by         varchar(64)     default ''              comment '创建者',
   create_time       datetime        default null            comment '创建时间',
   update_by         varchar(64)     default ''              comment '更新者',
@@ -111,6 +115,36 @@ create table if not exists erp_delivery_order (
   primary key (delivery_order_id),
   unique key uk_erp_delivery_order_no (delivery_order_no)
 ) engine=InnoDB default charset=utf8mb4 comment='发货单主表';
+
+create table if not exists erp_delivery_order_detail (
+  delivery_detail_id bigint(20)     not null auto_increment comment '发货单明细ID',
+  delivery_order_id  bigint(20)     not null                comment '发货单ID',
+  delivery_order_no  varchar(40)    not null                comment '发货单编号',
+  sales_detail_id    bigint(20)     default null            comment '销售订单明细ID',
+  inventory_id       bigint(20)     not null                comment '库存ID',
+  sku_id             bigint(20)     default null            comment '成衣SKU ID',
+  sku_code           varchar(80)    default null            comment 'SKU编码',
+  style_no           varchar(60)    default null            comment '款号',
+  style_name         varchar(100)   default null            comment '款式名称',
+  color_name         varchar(50)    default null            comment '颜色',
+  size_name          varchar(50)    default null            comment '尺码',
+  batch_no           varchar(80)    default ''              comment '批次号',
+  stock_qty          decimal(14,3)  default 0.000           comment '库存数量快照',
+  locked_qty         decimal(14,3)  default 0.000           comment '锁定数量',
+  available_qty      decimal(14,3)  default 0.000           comment '可用数量快照',
+  delivery_qty       decimal(14,3)  default 0.000           comment '发货数量',
+  unit_name          varchar(20)    default null            comment '单位',
+  unit_price         decimal(14,4)  default 0.0000          comment '单价',
+  create_by          varchar(64)    default ''              comment '创建者',
+  create_time        datetime       default null            comment '创建时间',
+  update_by          varchar(64)    default ''              comment '更新者',
+  update_time        datetime       default null            comment '更新时间',
+  remark             varchar(500)   default null            comment '备注',
+  primary key (delivery_detail_id),
+  key idx_erp_delivery_detail_order (delivery_order_id),
+  key idx_erp_delivery_detail_inventory (inventory_id),
+  key idx_erp_delivery_detail_sales (sales_detail_id)
+) engine=InnoDB default charset=utf8mb4 comment='发货单明细表';
 
 -- Compatibility patch for databases where these tables were created by an earlier draft.
 -- MySQL does not change an existing table when "create table if not exists" is re-run.
@@ -156,6 +190,46 @@ set @sql := if((select count(1) from information_schema.columns where table_sche
   'select 1');
 prepare stmt from @sql; execute stmt; deallocate prepare stmt;
 
+set @sql := if((select count(1) from information_schema.columns where table_schema = @schema_name and table_name = 'erp_delivery_order' and column_name = 'outbound_order_id') = 0,
+  'alter table erp_delivery_order add column outbound_order_id bigint(20) default null comment ''出库单ID'' after delivery_status',
+  'select 1');
+prepare stmt from @sql; execute stmt; deallocate prepare stmt;
+
+set @sql := if((select count(1) from information_schema.columns where table_schema = @schema_name and table_name = 'erp_delivery_order' and column_name = 'outbound_order_no') = 0,
+  'alter table erp_delivery_order add column outbound_order_no varchar(40) default null comment ''出库单编号'' after outbound_order_id',
+  'select 1');
+prepare stmt from @sql; execute stmt; deallocate prepare stmt;
+
+set @sql := if((select count(1) from information_schema.columns where table_schema = @schema_name and table_name = 'erp_delivery_order' and column_name = 'logistics_company') = 0,
+  'alter table erp_delivery_order add column logistics_company varchar(100) default null comment ''物流公司'' after delivery_status',
+  'select 1');
+prepare stmt from @sql; execute stmt; deallocate prepare stmt;
+
+set @sql := if((select count(1) from information_schema.columns where table_schema = @schema_name and table_name = 'erp_delivery_order' and column_name = 'tracking_no') = 0,
+  'alter table erp_delivery_order add column tracking_no varchar(100) default null comment ''物流单号'' after logistics_company',
+  'select 1');
+prepare stmt from @sql; execute stmt; deallocate prepare stmt;
+
+set @sql := if((select count(1) from information_schema.columns where table_schema = @schema_name and table_name = 'erp_delivery_order' and column_name = 'warehouse_id') = 0,
+  'alter table erp_delivery_order add column warehouse_id bigint(20) default null comment ''仓库ID'' after customer_name',
+  'select 1');
+prepare stmt from @sql; execute stmt; deallocate prepare stmt;
+
+set @sql := if((select count(1) from information_schema.columns where table_schema = @schema_name and table_name = 'erp_delivery_order' and column_name = 'warehouse_name') = 0,
+  'alter table erp_delivery_order add column warehouse_name varchar(100) default null comment ''仓库名称'' after warehouse_id',
+  'select 1');
+prepare stmt from @sql; execute stmt; deallocate prepare stmt;
+
+set @sql := if((select count(1) from information_schema.columns where table_schema = @schema_name and table_name = 'erp_delivery_order' and column_name = 'total_qty') = 0,
+  'alter table erp_delivery_order add column total_qty decimal(14,3) default 0.000 comment ''发货数量'' after delivery_date',
+  'select 1');
+prepare stmt from @sql; execute stmt; deallocate prepare stmt;
+
+set @sql := if((select count(1) from information_schema.columns where table_schema = @schema_name and table_name = 'erp_delivery_order' and column_name = 'delivery_qty') > 0,
+  'update erp_delivery_order set total_qty = ifnull(total_qty, delivery_qty)',
+  'select 1');
+prepare stmt from @sql; execute stmt; deallocate prepare stmt;
+
 insert into sys_menu
 select 3021, '订单管理', 3000, 2, 'order', null, '', '', 1, 0, 'M', '0', '0', '', 'shopping', 'admin', sysdate(), '', null, 'ERP订单管理目录'
 where not exists (select 1 from sys_menu where menu_id = 3021);
@@ -170,6 +244,7 @@ insert ignore into sys_menu values(3092, '销售新增', '3090', '2', '#', '', '
 insert ignore into sys_menu values(3093, '销售修改', '3090', '3', '#', '', '', '', 1, 0, 'F', '0', '0', 'erp:sales:edit', '#', 'admin', sysdate(), '', null, '');
 insert ignore into sys_menu values(3094, '销售删除', '3090', '4', '#', '', '', '', 1, 0, 'F', '0', '0', 'erp:sales:remove', '#', 'admin', sysdate(), '', null, '');
 insert ignore into sys_menu values(3095, '销售导出', '3090', '5', '#', '', '', '', 1, 0, 'F', '0', '0', 'erp:sales:export', '#', 'admin', sysdate(), '', null, '');
+insert ignore into sys_menu values(3096, '销售导入', '3090', '6', '#', '', '', '', 1, 0, 'F', '0', '0', 'erp:sales:import', '#', 'admin', sysdate(), '', null, '');
 
 insert ignore into sys_menu values(3100, '裁剪单', '3023', '2', 'cut', 'erp/cut/index', '', '', 1, 0, 'C', '0', '0', 'erp:cut:list', 'skill', 'admin', sysdate(), '', null, '裁剪单菜单');
 update sys_menu set parent_id = 3023, order_num = 2, icon = 'skill' where menu_id = 3100;
@@ -189,3 +264,6 @@ insert ignore into sys_menu values(3112, '发货新增', '3110', '2', '#', '', '
 insert ignore into sys_menu values(3113, '发货修改', '3110', '3', '#', '', '', '', 1, 0, 'F', '0', '0', 'erp:delivery:edit', '#', 'admin', sysdate(), '', null, '');
 insert ignore into sys_menu values(3114, '发货删除', '3110', '4', '#', '', '', '', 1, 0, 'F', '0', '0', 'erp:delivery:remove', '#', 'admin', sysdate(), '', null, '');
 insert ignore into sys_menu values(3115, '发货导出', '3110', '5', '#', '', '', '', 1, 0, 'F', '0', '0', 'erp:delivery:export', '#', 'admin', sysdate(), '', null, '');
+insert ignore into sys_menu values(3116, '发货确认', '3110', '6', '#', '', '', '', 1, 0, 'F', '0', '0', 'erp:delivery:confirm', '#', 'admin', sysdate(), '', null, '');
+insert ignore into sys_menu values(3117, '发货取消', '3110', '7', '#', '', '', '', 1, 0, 'F', '0', '0', 'erp:delivery:cancel', '#', 'admin', sysdate(), '', null, '');
+insert ignore into sys_menu values(3118, '物流维护', '3110', '8', '#', '', '', '', 1, 0, 'F', '0', '0', 'erp:delivery:logistics', '#', 'admin', sysdate(), '', null, '');

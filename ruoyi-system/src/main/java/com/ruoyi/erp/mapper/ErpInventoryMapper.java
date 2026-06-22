@@ -12,9 +12,16 @@ public interface ErpInventoryMapper
             @Param("itemId") Long itemId, @Param("batchNo") String batchNo);
     public ErpInventory selectFinishedGoodsInventoryForUpdate(@Param("warehouseId") Long warehouseId,
             @Param("itemType") String itemType, @Param("itemId") Long itemId);
+    public ErpInventory selectInventoryByIdForUpdate(Long inventoryId);
     public int insertInventory(ErpInventory inventory);
     public int insertOrIncreaseInventory(ErpInventory inventory);
     public int increaseAvailableQty(@Param("inventoryId") Long inventoryId, @Param("qty") BigDecimal qty,
             @Param("unitPrice") BigDecimal unitPrice);
     public int decreaseAvailableQty(@Param("inventoryId") Long inventoryId, @Param("qty") BigDecimal qty);
+    public int increaseLockedQty(@Param("inventoryId") Long inventoryId, @Param("qty") BigDecimal qty);
+    public int decreaseLockedQty(@Param("inventoryId") Long inventoryId, @Param("qty") BigDecimal qty);
+    public int decreaseAvailableAndLockedQty(@Param("inventoryId") Long inventoryId, @Param("availableQty") BigDecimal availableQty,
+            @Param("lockedQty") BigDecimal lockedQty);
+    public int increaseAvailableAndLockedQty(@Param("inventoryId") Long inventoryId, @Param("availableQty") BigDecimal availableQty,
+            @Param("lockedQty") BigDecimal lockedQty);
 }

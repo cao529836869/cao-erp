@@ -74,7 +74,10 @@
           <el-col :span="8"><el-form-item label="完工日期" prop="planFinishDate"><el-date-picker v-model="form.planFinishDate" value-format="yyyy-MM-dd" type="date" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="状态"><el-input v-model="form.orderStatus" disabled /></el-form-item></el-col>
         </el-row>
-        <div class="mb8"><el-button type="primary" plain size="mini" icon="el-icon-plus" @click="addDetail">新增明细</el-button></div>
+        <div class="mb8">
+          <el-button type="primary" plain size="mini" icon="el-icon-plus" @click="addDetail">新增明细</el-button>
+          <el-button v-if="form.productionOrderId" type="info" plain size="mini" icon="el-icon-scissors" @click="handleViewCut(form)">查看裁剪单</el-button>
+        </div>
         <el-table :data="form.detailList" border size="mini">
           <el-table-column label="款式" width="90"><template slot-scope="scope"><el-button type="text" size="mini" @click="openSkuSelector(scope.$index)">选SKU</el-button></template></el-table-column>
           <el-table-column label="款号" min-width="150"><template slot-scope="scope"><el-input v-model="scope.row.styleNo" /></template></el-table-column>
@@ -82,9 +85,6 @@
           <el-table-column label="颜色" width="100"><template slot-scope="scope"><el-input v-model="scope.row.colorName" /></template></el-table-column>
           <el-table-column label="尺码" width="90"><template slot-scope="scope"><el-input v-model="scope.row.sizeName" /></template></el-table-column>
           <el-table-column label="计划数" width="130"><template slot-scope="scope"><el-input-number v-model="scope.row.planQty" :min="0" :precision="3" controls-position="right" style="width:100%" /></template></el-table-column>
-          <el-table-column label="已裁剪" width="110"><template slot-scope="scope"><el-input-number v-model="scope.row.cutQty" :min="0" :precision="3" controls-position="right" style="width:100%" /></template></el-table-column>
-          <el-table-column label="已缝制" width="110"><template slot-scope="scope"><el-input-number v-model="scope.row.sewnQty" :min="0" :precision="3" controls-position="right" style="width:100%" /></template></el-table-column>
-          <el-table-column label="合格数" width="110"><template slot-scope="scope"><el-input-number v-model="scope.row.qualifiedQty" :min="0" :precision="3" controls-position="right" style="width:100%" /></template></el-table-column>
           <el-table-column label="操作" width="70"><template slot-scope="scope"><el-button type="text" @click="removeDetail(scope.$index)">删除</el-button></template></el-table-column>
         </el-table>
       </el-form>
@@ -107,6 +107,30 @@
       </el-table>
       <pagination v-show="skuTotal>0" :total="skuTotal" :page.sync="skuQuery.pageNum" :limit.sync="skuQuery.pageSize" @pagination="getSkuList" />
     </el-dialog>
+
+    <el-dialog title="裁剪单详情" :visible.sync="cutOpen" width="980px" append-to-body>
+      <el-descriptions v-if="cutForm.cutOrderId" :column="3" border size="small">
+        <el-descriptions-item label="裁剪单号">{{ cutForm.cutOrderNo || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="生产单号">{{ cutForm.productionOrderNo || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="状态">{{ cutForm.cutStatusName || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="客户">{{ cutForm.customerName || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="计划数量">{{ cutForm.totalQty || 0 }}</el-descriptions-item>
+        <el-descriptions-item label="实际已裁">{{ cutForm.actualCutQty || 0 }}</el-descriptions-item>
+        <el-descriptions-item label="计划完成">{{ cutForm.planFinishTime || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="实际完成">{{ cutForm.finishTime || '-' }}</el-descriptions-item>
+        <el-descriptions-item label="销售单号">{{ cutForm.salesOrderNo || '-' }}</el-descriptions-item>
+      </el-descriptions>
+      <el-empty v-else description="当前生产订单还没有裁剪单" />
+      <el-table v-if="cutForm.cutOrderId" :data="cutForm.detailList || []" border size="mini" class="mt16">
+        <el-table-column label="款号" prop="styleNo" min-width="130" />
+        <el-table-column label="款式名称" prop="styleName" min-width="160" />
+        <el-table-column label="颜色" prop="colorName" width="100" />
+        <el-table-column label="尺码" prop="sizeName" width="90" />
+        <el-table-column label="计划数" prop="planQty" align="right" width="120" />
+        <el-table-column label="实际已裁" prop="cutQty" align="right" width="120" />
+      </el-table>
+      <div slot="footer" class="dialog-footer"><el-button @click="cutOpen = false">关 闭</el-button></div>
+    </el-dialog>
   </div>
 </template>
 
@@ -114,6 +138,7 @@
 import { listProduction, getProduction, addProduction, updateProduction, delProduction, releaseProduction, closeProduction, buildProductionPicking, buildProductionCut } from "@/api/erp/production"
 import { listStyleSku } from "@/api/erp/style"
 import { optionselectCustomer } from "@/api/erp/customer"
+import { getCutByProduction } from "@/api/erp/cut"
 
 export default {
   name: "ErpProduction",
@@ -123,6 +148,7 @@ export default {
       orderList: [], customerOptions: [], statuses: ["草稿", "已下达", "裁剪中", "缝制中", "后整中", "已完成", "已关闭"],
       queryParams: { pageNum: 1, pageSize: 10, productionOrderNo: undefined, salesOrderNo: undefined, customerName: undefined, orderStatus: undefined },
       form: {}, rules: { planStartDate: [{ required: true, message: "计划开工日期不能为空", trigger: "change" }], planFinishDate: [{ required: true, message: "计划完工日期不能为空", trigger: "change" }] },
+      cutOpen: false, cutForm: {},
       skuOpen: false, skuLoading: false, skuList: [], skuTotal: 0, skuRowIndex: -1, skuQuery: { pageNum: 1, pageSize: 10, styleNo: undefined, skuCode: undefined, status: "0" }
     }
   },
@@ -154,6 +180,7 @@ export default {
     },
     submitForm() { this.$refs["form"].validate(valid => { if (!valid) return; const req = this.form.productionOrderId ? updateProduction(this.form) : addProduction(this.form); req.then(() => { this.$modal.msgSuccess("保存成功"); this.open = false; this.getList() }) }) },
     canSubmitForm() { return !this.form.productionOrderId || this.form.orderStatus === "草稿" },
+    handleViewCut(row) { getCutByProduction(row.productionOrderId).then(res => { this.cutForm = res.data || {}; this.cutOpen = true }) },
     handleDelete(row) { const ids = row.productionOrderId || this.ids; this.$modal.confirm('确认删除生产订单编号为"' + ids + '"的数据项？').then(() => delProduction(ids)).then(() => { this.getList(); this.$modal.msgSuccess("删除成功") }).catch(() => {}) },
     handleRelease(row) { this.$modal.confirm('确认下达生产订单"' + row.productionOrderNo + '"？下达后将不能修改明细。').then(() => releaseProduction(row.productionOrderId)).then(() => { this.getList(); this.$modal.msgSuccess("下达成功") }).catch(() => {}) },
     handleBuildPicking(row) { this.$modal.confirm('确认按BOM生成生产订单"' + row.productionOrderNo + '"的领料出库单？').then(() => buildProductionPicking(row.productionOrderId)).then(() => { this.getList(); this.$modal.msgSuccess("领料单已生成，请到出库单确认批次后过账") }).catch(() => {}) },

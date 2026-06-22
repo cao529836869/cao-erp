@@ -73,6 +73,13 @@ public class ErpCutOrderController extends BaseController
         return success(cutOrderService.selectCutOrderById(cutOrderId));
     }
 
+    @PreAuthorize("@ss.hasPermi('erp:cut:query')")
+    @GetMapping("/production/{productionOrderId}")
+    public AjaxResult getByProduction(@PathVariable Long productionOrderId)
+    {
+        return success(cutOrderService.selectCutOrderByProductionOrderId(productionOrderId));
+    }
+
     @PreAuthorize("@ss.hasPermi('erp:cut:add')")
     @Log(title = "裁剪单", businessType = BusinessType.INSERT)
     @PostMapping

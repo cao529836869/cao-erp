@@ -1,0 +1,18 @@
+[Unit]
+Description=Cao ERP Spring Boot Service
+After=network.target mysql.service redis.service
+
+[Service]
+Type=simple
+User=caoerp
+Group=caoerp
+WorkingDirectory=/opt/cao-erp
+Environment="JAVA_OPTS=-Duser.timezone=Asia/Shanghai -Xms512m -Xmx1024m"
+EnvironmentFile=-/opt/cao-erp/cao-erp.env
+ExecStart=/usr/bin/java $JAVA_OPTS -jar /opt/cao-erp/ruoyi-admin.jar --spring.profiles.active=prod,druid-prod --spring.config.additional-location=/opt/cao-erp/config/
+SuccessExitStatus=143
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

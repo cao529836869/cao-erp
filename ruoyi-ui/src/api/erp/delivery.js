@@ -19,3 +19,19 @@ export function updateDelivery(data) {
 export function delDelivery(deliveryOrderId) {
   return request({ url: '/erp/delivery/' + deliveryOrderId, method: 'delete' })
 }
+
+export function confirmDelivery(deliveryOrderId) {
+  return request({ url: '/erp/delivery/confirm/' + deliveryOrderId, method: 'put' })
+}
+
+export function cancelDelivery(deliveryOrderId) {
+  return request({ url: '/erp/delivery/cancel/' + deliveryOrderId, method: 'put' })
+}
+
+export function updateDeliveryLogistics(data) {
+  return request({ url: '/erp/delivery/logistics', method: 'put', data })
+}
+
+export function queryDeliveryLogistics(deliveryOrderId) {
+  return request({ url: '/erp/delivery/logistics/' + deliveryOrderId, method: 'get' })
+}

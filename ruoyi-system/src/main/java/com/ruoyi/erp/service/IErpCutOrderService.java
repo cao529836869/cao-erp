@@ -8,6 +8,7 @@ import com.ruoyi.erp.domain.ErpCutOrder;
 public interface IErpCutOrderService
 {
     public ErpCutOrder selectCutOrderById(Long cutOrderId);
+    public ErpCutOrder selectCutOrderByProductionOrderId(Long productionOrderId);
     public List<ErpCutOrder> selectCutOrderList(ErpCutOrder cutOrder);
     public int insertCutOrder(ErpCutOrder cutOrder);
     public int updateCutOrder(ErpCutOrder cutOrder);

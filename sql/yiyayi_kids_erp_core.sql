@@ -6,6 +6,7 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
+DROP TABLE IF EXISTS erp_delivery_order_detail;
 DROP TABLE IF EXISTS erp_delivery_order;
 DROP TABLE IF EXISTS erp_quality_check;
 DROP TABLE IF EXISTS erp_sewing_report;
@@ -754,17 +755,17 @@ CREATE TABLE erp_delivery_order (
   delivery_order_no VARCHAR(40)     NOT NULL                COMMENT '发货单编号',
   sales_order_id    BIGINT(20)      DEFAULT NULL            COMMENT '销售订单ID',
   sales_order_no    VARCHAR(40)     DEFAULT NULL            COMMENT '销售订单编号',
-  customer_id       BIGINT(20)      NOT NULL                COMMENT '客户ID',
-  customer_name     VARCHAR(100)    NOT NULL                COMMENT '客户名称',
-  delivery_date     DATE            NOT NULL                COMMENT '发货日期',
-  delivery_qty      DECIMAL(14,3)   DEFAULT 0.000           COMMENT '发货总件数',
-  carton_count      INT(11)         DEFAULT 0               COMMENT '箱数',
+  customer_id       BIGINT(20)      DEFAULT NULL            COMMENT '客户ID',
+  customer_name     VARCHAR(100)    DEFAULT NULL            COMMENT '客户名称',
+  warehouse_id      BIGINT(20)      DEFAULT NULL            COMMENT '仓库ID',
+  warehouse_name    VARCHAR(100)    DEFAULT NULL            COMMENT '仓库名称',
+  delivery_date     DATE            DEFAULT NULL            COMMENT '发货日期',
+  total_qty         DECIMAL(14,3)   DEFAULT 0.000           COMMENT '发货数量',
+  delivery_status   VARCHAR(20)     DEFAULT '草稿'          COMMENT '发货状态',
   logistics_company VARCHAR(100)    DEFAULT NULL            COMMENT '物流公司',
   tracking_no       VARCHAR(100)    DEFAULT NULL            COMMENT '物流单号',
-  receiver_name     VARCHAR(50)     DEFAULT NULL            COMMENT '收货人',
-  receiver_phone    VARCHAR(30)     DEFAULT NULL            COMMENT '收货电话',
-  receiver_address  VARCHAR(255)    DEFAULT NULL            COMMENT '收货地址',
-  delivery_status   VARCHAR(20)     DEFAULT '待发货'        COMMENT '发货状态，如待发货、已发货、已签收、已取消',
+  outbound_order_id BIGINT(20)      DEFAULT NULL            COMMENT '出库单ID',
+  outbound_order_no VARCHAR(40)     DEFAULT NULL            COMMENT '出库单编号',
   create_by         VARCHAR(64)     DEFAULT ''              COMMENT '创建者',
   create_time       DATETIME        DEFAULT NULL            COMMENT '创建时间',
   update_by         VARCHAR(64)     DEFAULT ''              COMMENT '更新者',
@@ -776,6 +777,36 @@ CREATE TABLE erp_delivery_order (
   KEY idx_erp_delivery_order_customer_id (customer_id),
   KEY idx_erp_delivery_order_date (delivery_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='发货单表';
+
+CREATE TABLE erp_delivery_order_detail (
+  delivery_detail_id BIGINT(20)     NOT NULL AUTO_INCREMENT COMMENT '发货单明细ID',
+  delivery_order_id  BIGINT(20)     NOT NULL                COMMENT '发货单ID',
+  delivery_order_no  VARCHAR(40)    NOT NULL                COMMENT '发货单编号',
+  sales_detail_id    BIGINT(20)     DEFAULT NULL            COMMENT '销售订单明细ID',
+  inventory_id       BIGINT(20)     NOT NULL                COMMENT '库存ID',
+  sku_id             BIGINT(20)     DEFAULT NULL            COMMENT '成衣SKU ID',
+  sku_code           VARCHAR(80)    DEFAULT NULL            COMMENT 'SKU编码',
+  style_no           VARCHAR(60)    DEFAULT NULL            COMMENT '款号',
+  style_name         VARCHAR(100)   DEFAULT NULL            COMMENT '款式名称',
+  color_name         VARCHAR(50)    DEFAULT NULL            COMMENT '颜色',
+  size_name          VARCHAR(50)    DEFAULT NULL            COMMENT '尺码',
+  batch_no           VARCHAR(80)    DEFAULT ''              COMMENT '批次号',
+  stock_qty          DECIMAL(14,3)  DEFAULT 0.000           COMMENT '库存数量快照',
+  locked_qty         DECIMAL(14,3)  DEFAULT 0.000           COMMENT '锁定数量',
+  available_qty      DECIMAL(14,3)  DEFAULT 0.000           COMMENT '可用数量快照',
+  delivery_qty       DECIMAL(14,3)  DEFAULT 0.000           COMMENT '发货数量',
+  unit_name          VARCHAR(20)    DEFAULT NULL            COMMENT '单位',
+  unit_price         DECIMAL(14,4)  DEFAULT 0.0000          COMMENT '单价',
+  create_by          VARCHAR(64)    DEFAULT ''              COMMENT '创建者',
+  create_time        DATETIME       DEFAULT NULL            COMMENT '创建时间',
+  update_by          VARCHAR(64)    DEFAULT ''              COMMENT '更新者',
+  update_time        DATETIME       DEFAULT NULL            COMMENT '更新时间',
+  remark             VARCHAR(500)   DEFAULT NULL            COMMENT '备注',
+  PRIMARY KEY (delivery_detail_id),
+  KEY idx_erp_delivery_detail_order (delivery_order_id),
+  KEY idx_erp_delivery_detail_inventory (inventory_id),
+  KEY idx_erp_delivery_detail_sales (sales_detail_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='发货单明细表';
 
 SET FOREIGN_KEY_CHECKS = 1;
 

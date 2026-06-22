@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.erp.mapper.ErpDeliveryOrderDetailMapper">
+
+    <resultMap type="ErpDeliveryOrderDetail" id="ErpDeliveryOrderDetailResult">
+        <id property="deliveryDetailId" column="delivery_detail_id"/>
+        <result property="deliveryOrderId" column="delivery_order_id"/>
+        <result property="deliveryOrderNo" column="delivery_order_no"/>
+        <result property="salesDetailId" column="sales_detail_id"/>
+        <result property="inventoryId" column="inventory_id"/>
+        <result property="skuId" column="sku_id"/>
+        <result property="skuCode" column="sku_code"/>
+        <result property="styleNo" column="style_no"/>
+        <result property="styleName" column="style_name"/>
+        <result property="colorName" column="color_name"/>
+        <result property="sizeName" column="size_name"/>
+        <result property="batchNo" column="batch_no"/>
+        <result property="stockQty" column="stock_qty"/>
+        <result property="lockedQty" column="locked_qty"/>
+        <result property="availableQty" column="available_qty"/>
+        <result property="deliveryQty" column="delivery_qty"/>
+        <result property="unitName" column="unit_name"/>
+        <result property="unitPrice" column="unit_price"/>
+        <result property="createBy" column="create_by"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateBy" column="update_by"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="remark" column="remark"/>
+    </resultMap>
+
+    <select id="selectDetailByOrderId" parameterType="Long" resultMap="ErpDeliveryOrderDetailResult">
+        select delivery_detail_id, delivery_order_id, delivery_order_no, sales_detail_id, inventory_id, sku_id,
+               sku_code, style_no, style_name, color_name, size_name, batch_no, stock_qty, locked_qty,
+               available_qty, delivery_qty, unit_name, unit_price, create_by, create_time, update_by, update_time, remark
+        from erp_delivery_order_detail
+        where delivery_order_id = #{deliveryOrderId}
+        order by delivery_detail_id asc
+    </select>
+
+    <insert id="batchInsertDetail">
+        insert into erp_delivery_order_detail(delivery_order_id, delivery_order_no, sales_detail_id, inventory_id, sku_id,
+            sku_code, style_no, style_name, color_name, size_name, batch_no, stock_qty, locked_qty,
+            available_qty, delivery_qty, unit_name, unit_price, create_by, create_time, remark)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.deliveryOrderId}, #{item.deliveryOrderNo}, #{item.salesDetailId}, #{item.inventoryId}, #{item.skuId},
+             #{item.skuCode}, #{item.styleNo}, #{item.styleName}, #{item.colorName}, #{item.sizeName}, #{item.batchNo},
+             #{item.stockQty}, #{item.lockedQty}, #{item.availableQty}, #{item.deliveryQty}, #{item.unitName},
+             #{item.unitPrice}, #{item.createBy}, sysdate(), #{item.remark})
+        </foreach>
+    </insert>
+
+    <update id="updateLockInfo" parameterType="ErpDeliveryOrderDetail">
+        update erp_delivery_order_detail
+        set sku_id = #{skuId}, sku_code = #{skuCode}, style_no = #{styleNo}, style_name = #{styleName},
+            color_name = #{colorName}, size_name = #{sizeName}, batch_no = #{batchNo},
+            stock_qty = #{stockQty}, locked_qty = #{lockedQty}, available_qty = #{availableQty},
+            unit_name = #{unitName}, unit_price = #{unitPrice}, update_by = #{updateBy}, update_time = sysdate()
+        where delivery_detail_id = #{deliveryDetailId}
+    </update>
+
+    <delete id="deleteDetailByOrderId" parameterType="Long">
+        delete from erp_delivery_order_detail where delivery_order_id = #{deliveryOrderId}
+    </delete>
+
+    <delete id="deleteDetailByOrderIds" parameterType="Long">
+        delete from erp_delivery_order_detail where delivery_order_id in
+        <foreach collection="array" item="deliveryOrderId" open="(" separator="," close=")">#{deliveryOrderId}</foreach>
+    </delete>
+</mapper>

@@ -13,11 +13,13 @@ import com.ruoyi.common.utils.DateUtils;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.erp.domain.ErpInventory;
 import com.ruoyi.erp.domain.ErpInventoryTransaction;
+import com.ruoyi.erp.domain.ErpDeliveryOrder;
 import com.ruoyi.erp.domain.ErpOutboundOrder;
 import com.ruoyi.erp.domain.ErpOutboundOrderDetail;
 import com.ruoyi.erp.domain.ErpWarehouse;
 import com.ruoyi.erp.mapper.ErpInventoryMapper;
 import com.ruoyi.erp.mapper.ErpInventoryTransactionMapper;
+import com.ruoyi.erp.mapper.ErpDeliveryOrderMapper;
 import com.ruoyi.erp.mapper.ErpOutboundOrderDetailMapper;
 import com.ruoyi.erp.mapper.ErpOutboundOrderMapper;
 import com.ruoyi.erp.mapper.ErpWarehouseMapper;
@@ -30,6 +32,7 @@ public class ErpOutboundOrderServiceImpl implements IErpOutboundOrderService
     @Autowired private ErpOutboundOrderDetailMapper detailMapper;
     @Autowired private ErpInventoryMapper inventoryMapper;
     @Autowired private ErpInventoryTransactionMapper transactionMapper;
+    @Autowired private ErpDeliveryOrderMapper deliveryOrderMapper;
     @Autowired private ErpWarehouseMapper warehouseMapper;
 
     @Override
@@ -154,7 +157,20 @@ public class ErpOutboundOrderServiceImpl implements IErpOutboundOrderService
             {
                 throw new ServiceException("库存不足：" + detail.getItemCode() + " 批次 " + batchNo);
             }
-            int rows = inventoryMapper.decreaseAvailableQty(inventory.getInventoryId(), qty);
+            int rows;
+            BigDecimal lockedQty = nvl(detail.getLockedQty());
+            if (lockedQty.compareTo(BigDecimal.ZERO) > 0)
+            {
+                if (nvl(inventory.getLockedQty()).compareTo(lockedQty) < 0)
+                {
+                    throw new ServiceException("锁定库存不足：" + detail.getItemCode() + " 批次 " + batchNo);
+                }
+                rows = inventoryMapper.decreaseAvailableAndLockedQty(inventory.getInventoryId(), qty, lockedQty);
+            }
+            else
+            {
+                rows = inventoryMapper.decreaseAvailableQty(inventory.getInventoryId(), qty);
+            }
             if (rows == 0)
             {
                 throw new ServiceException("库存不足：" + detail.getItemCode() + " 批次 " + batchNo);
@@ -175,6 +191,7 @@ public class ErpOutboundOrderServiceImpl implements IErpOutboundOrderService
         {
             throw new ServiceException("出库单状态已变化，请刷新后重试");
         }
+        syncDeliveryStatus(order, "已发货", username);
         return rows;
     }
 
@@ -220,7 +237,15 @@ public class ErpOutboundOrderServiceImpl implements IErpOutboundOrderService
             }
             else
             {
-                inventoryMapper.increaseAvailableQty(inventory.getInventoryId(), qty, inventory.getUnitPrice());
+                BigDecimal lockedQty = nvl(detail.getLockedQty());
+                if (lockedQty.compareTo(BigDecimal.ZERO) > 0)
+                {
+                    inventoryMapper.increaseAvailableAndLockedQty(inventory.getInventoryId(), qty, lockedQty);
+                }
+                else
+                {
+                    inventoryMapper.increaseAvailableQty(inventory.getInventoryId(), qty, inventory.getUnitPrice());
+                }
                 balanceQty = nvl(inventory.getAvailableQty()).add(qty);
             }
             transactionMapper.insertTransaction(buildTransaction(order, detail, "取消" + order.getOutboundType(), "CO", qty, BigDecimal.ZERO, balanceQty, username, now));
@@ -234,6 +259,7 @@ public class ErpOutboundOrderServiceImpl implements IErpOutboundOrderService
         {
             throw new ServiceException("出库单状态已变化，请刷新后重试");
         }
+        syncDeliveryStatus(order, "已确认", username);
         return rows;
     }
 
@@ -326,6 +352,19 @@ public class ErpOutboundOrderServiceImpl implements IErpOutboundOrderService
         inventory.setUnitName(detail.getUnitName());
         inventory.setRemark("取消出库单" + order.getOutboundOrderNo() + "生成");
         return inventory;
+    }
+
+    private void syncDeliveryStatus(ErpOutboundOrder order, String status, String username)
+    {
+        if (!"发货单".equals(order.getSourceType()))
+        {
+            return;
+        }
+        ErpDeliveryOrder deliveryOrder = new ErpDeliveryOrder();
+        deliveryOrder.setOutboundOrderId(order.getOutboundOrderId());
+        deliveryOrder.setDeliveryStatus(status);
+        deliveryOrder.setUpdateBy(username);
+        deliveryOrderMapper.updateDeliveryStatusByOutboundOrderId(deliveryOrder);
     }
 
     private ErpInventoryTransaction buildTransaction(ErpOutboundOrder order, ErpOutboundOrderDetail detail, String transactionType,

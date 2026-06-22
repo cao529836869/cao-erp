@@ -79,4 +79,35 @@ public class ErpDeliveryOrderController extends BaseController
     {
         return toAjax(deliveryOrderService.deleteDeliveryOrderByIds(deliveryOrderIds));
     }
+
+    @PreAuthorize("@ss.hasPermi('erp:delivery:confirm')")
+    @Log(title = "发货单确认", businessType = BusinessType.UPDATE)
+    @PutMapping("/confirm/{deliveryOrderId}")
+    public AjaxResult confirm(@PathVariable Long deliveryOrderId)
+    {
+        return toAjax(deliveryOrderService.confirmDeliveryOrder(deliveryOrderId, getUsername()));
+    }
+
+    @PreAuthorize("@ss.hasPermi('erp:delivery:cancel')")
+    @Log(title = "发货单取消", businessType = BusinessType.UPDATE)
+    @PutMapping("/cancel/{deliveryOrderId}")
+    public AjaxResult cancel(@PathVariable Long deliveryOrderId)
+    {
+        return toAjax(deliveryOrderService.cancelDeliveryOrder(deliveryOrderId, getUsername()));
+    }
+
+    @PreAuthorize("@ss.hasPermi('erp:delivery:logistics')")
+    @Log(title = "发货单物流", businessType = BusinessType.UPDATE)
+    @PutMapping("/logistics")
+    public AjaxResult logistics(@RequestBody ErpDeliveryOrder deliveryOrder)
+    {
+        return toAjax(deliveryOrderService.updateDeliveryLogistics(deliveryOrder, getUsername()));
+    }
+
+    @PreAuthorize("@ss.hasPermi('erp:delivery:query')")
+    @GetMapping("/logistics/{deliveryOrderId}")
+    public AjaxResult queryLogistics(@PathVariable Long deliveryOrderId)
+    {
+        return success(deliveryOrderService.queryDeliveryLogistics(deliveryOrderId));
+    }
 }

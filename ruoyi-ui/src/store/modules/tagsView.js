@@ -2,6 +2,7 @@ import store from '@/store'
 import cache from '@/plugins/cache'
 
 const PERSIST_KEY = 'tags-view-visited'
+const AI_CHAT_STATE_KEY = 'ai-chat-state'
 
 function isPersistEnabled() {
   return store.state.settings.tagsViewPersist
@@ -19,6 +20,19 @@ function loadVisitedViews() {
 
 function clearVisitedViews() {
   cache.local.remove(PERSIST_KEY)
+}
+
+function isAiChatView(view) {
+  const path = (view && (view.path || view.fullPath)) || ''
+  return path === '/ai/chat' || path.indexOf('/ai/chat?') === 0
+}
+
+function clearAiChatStateIfRemoved(beforeViews, afterViews) {
+  const hadAiChat = beforeViews.some(isAiChatView)
+  const hasAiChat = afterViews.some(isAiChatView)
+  if (hadAiChat && !hasAiChat) {
+    cache.session.remove(AI_CHAT_STATE_KEY)
+  }
 }
 
 const state = {
@@ -60,6 +74,7 @@ const mutations = {
     }
   },
   DEL_VISITED_VIEW: (state, view) => {
+    const beforeViews = [...state.visitedViews]
     for (const [i, v] of state.visitedViews.entries()) {
       if (v.path === view.path) {
         state.visitedViews.splice(i, 1)
@@ -67,6 +82,7 @@ const mutations = {
       }
     }
     state.iframeViews = state.iframeViews.filter(item => item.path !== view.path)
+    clearAiChatStateIfRemoved(beforeViews, state.visitedViews)
     saveVisitedViews(state.visitedViews)
   },
   DEL_IFRAME_VIEW: (state, view) => {
@@ -78,10 +94,12 @@ const mutations = {
   },
 
   DEL_OTHERS_VISITED_VIEWS: (state, view) => {
+    const beforeViews = [...state.visitedViews]
     state.visitedViews = state.visitedViews.filter(v => {
       return v.meta.affix || v.path === view.path
     })
     state.iframeViews = state.iframeViews.filter(item => item.path === view.path)
+    clearAiChatStateIfRemoved(beforeViews, state.visitedViews)
     saveVisitedViews(state.visitedViews)
   },
   DEL_OTHERS_CACHED_VIEWS: (state, view) => {
@@ -93,10 +111,12 @@ const mutations = {
     }
   },
   DEL_ALL_VISITED_VIEWS: state => {
+    const beforeViews = [...state.visitedViews]
     // keep affix tags
     const affixTags = state.visitedViews.filter(tag => tag.meta.affix)
     state.visitedViews = affixTags
     state.iframeViews = []
+    clearAiChatStateIfRemoved(beforeViews, state.visitedViews)
     clearVisitedViews()
   },
   DEL_ALL_CACHED_VIEWS: state => {
@@ -115,6 +135,7 @@ const mutations = {
     if (index === -1) {
       return
     }
+    const beforeViews = [...state.visitedViews]
     state.visitedViews = state.visitedViews.filter((item, idx) => {
       if (idx <= index || (item.meta && item.meta.affix)) {
         return true
@@ -129,6 +150,7 @@ const mutations = {
       }
       return false
     })
+    clearAiChatStateIfRemoved(beforeViews, state.visitedViews)
     saveVisitedViews(state.visitedViews)
   },
   DEL_LEFT_VIEWS: (state, view) => {
@@ -136,6 +158,7 @@ const mutations = {
     if (index === -1) {
       return
     }
+    const beforeViews = [...state.visitedViews]
     state.visitedViews = state.visitedViews.filter((item, idx) => {
       if (idx >= index || (item.meta && item.meta.affix)) {
         return true
@@ -150,6 +173,7 @@ const mutations = {
       }
       return false
     })
+    clearAiChatStateIfRemoved(beforeViews, state.visitedViews)
     saveVisitedViews(state.visitedViews)
   }
 }

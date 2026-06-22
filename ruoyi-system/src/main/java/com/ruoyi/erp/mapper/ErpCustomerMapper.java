@@ -34,6 +34,14 @@ public interface ErpCustomerMapper
     public ErpCustomer selectCustomerById(Long customerId);
 
     /**
+     * 根据客户名称查询正常客户档案
+     *
+     * @param customerName 客户名称
+     * @return 客户档案
+     */
+    public ErpCustomer selectCustomerByName(String customerName);
+
+    /**
      * 新增客户档案
      *
      * @param customer 客户档案

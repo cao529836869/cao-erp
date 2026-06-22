@@ -77,6 +77,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where customer_id = #{customerId} and del_flag = '0'
     </select>
 
+    <select id="selectCustomerByName" parameterType="String" resultMap="ErpCustomerResult">
+        <include refid="selectCustomerVo"/>
+        where customer_name = #{customerName} and del_flag = '0' and status = '0' limit 1
+    </select>
+
     <select id="checkCustomerCodeUnique" parameterType="String" resultMap="ErpCustomerResult">
         <include refid="selectCustomerVo"/>
         where customer_code = #{customerCode} and del_flag = '0' limit 1

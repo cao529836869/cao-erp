@@ -1,0 +1,57 @@
+ruoyi:
+  profile: /opt/cao-erp/uploadPath
+  addressEnabled: false
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+  tomcat:
+    uri-encoding: UTF-8
+    accept-count: 500
+    threads:
+      max: 200
+      min-spare: 20
+
+logging:
+  level:
+    com.ruoyi: info
+    org.springframework: warn
+
+spring:
+  devtools:
+    restart:
+      enabled: false
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      database: ${REDIS_DATABASE:0}
+      password: ${REDIS_PASSWORD:}
+      timeout: 10s
+      lettuce:
+        pool:
+          min-idle: 0
+          max-idle: 8
+          max-active: 8
+          max-wait: -1ms
+
+token:
+  secret: ${JWT_SECRET:please-change-this-secret}
+  expireTime: 120
+
+minio:
+  enabled: ${MINIO_ENABLED:false}
+  endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9000}
+  accessKey: ${MINIO_ACCESS_KEY:}
+  secretKey: ${MINIO_SECRET_KEY:}
+  bucketName: ${MINIO_BUCKET:yiyayi-erp}
+  objectPrefix: erp
+
+springdoc:
+  swagger-ui:
+    enabled: false
+
+referer:
+  enabled: false
+  allowed-domains: example.com,www.example.com

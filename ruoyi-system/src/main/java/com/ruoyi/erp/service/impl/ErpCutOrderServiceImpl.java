@@ -57,6 +57,17 @@ public class ErpCutOrderServiceImpl implements IErpCutOrderService
     }
 
     @Override
+    public ErpCutOrder selectCutOrderByProductionOrderId(Long productionOrderId)
+    {
+        ErpCutOrder order = cutOrderMapper.selectCutOrderByProductionOrderId(productionOrderId);
+        if (order != null)
+        {
+            order.setDetailList(cutDetailMapper.selectDetailByOrderId(order.getCutOrderId()));
+        }
+        return order;
+    }
+
+    @Override
     public List<ErpCutOrder> selectCutOrderList(ErpCutOrder cutOrder)
     {
         return cutOrderMapper.selectCutOrderList(cutOrder);

@@ -11,6 +11,7 @@
       <el-col :span="1.5"><el-button type="primary" plain icon="el-icon-plus" size="mini" @click="handleAdd" v-hasPermi="['erp:sales:add']">新增</el-button></el-col>
       <el-col :span="1.5"><el-button type="success" plain icon="el-icon-edit" size="mini" :disabled="single" @click="handleUpdate" v-hasPermi="['erp:sales:edit']">修改</el-button></el-col>
       <el-col :span="1.5"><el-button type="danger" plain icon="el-icon-delete" size="mini" :disabled="multiple" @click="handleDelete" v-hasPermi="['erp:sales:remove']">删除</el-button></el-col>
+      <el-col :span="1.5"><el-button type="info" plain icon="el-icon-upload2" size="mini" @click="handleImport" v-hasPermi="['erp:sales:import']">导入</el-button></el-col>
       <el-col :span="1.5"><el-button type="warning" plain icon="el-icon-download" size="mini" @click="handleExport" v-hasPermi="['erp:sales:export']">导出</el-button></el-col>
       <right-toolbar :showSearch.sync="showSearch" @queryTable="getList" />
     </el-row>
@@ -33,9 +34,10 @@
       <el-table-column label="状态" align="center" prop="orderStatus" width="100">
         <template slot-scope="scope"><span :class="['erp-chip', $erpStatusToneClass(scope.row.orderStatus)]">{{ scope.row.orderStatus || '-' }}</span></template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="170" fixed="right">
+      <el-table-column label="操作" align="center" width="230" fixed="right">
         <template slot-scope="scope">
           <el-button size="mini" type="text" icon="el-icon-view" @click="handleUpdate(scope.row)">查看</el-button>
+          <el-button size="mini" type="text" icon="el-icon-s-order" @click="handleGenerateProduction(scope.row)" v-hasPermi="['erp:production:add']">生成生产</el-button>
           <el-button size="mini" type="text" icon="el-icon-delete" @click="handleDelete(scope.row)" v-hasPermi="['erp:sales:remove']">删除</el-button>
         </template>
       </el-table-column>
@@ -46,7 +48,13 @@
       <el-form ref="form" :model="form" :rules="rules" label-width="90px">
         <el-row :gutter="16">
           <el-col :span="8"><el-form-item label="销售单号"><el-input v-model="form.salesOrderNo" placeholder="留空自动生成" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="客户" prop="customerName"><el-input v-model="form.customerName" /></el-form-item></el-col>
+          <el-col :span="8">
+            <el-form-item label="客户" prop="customerName">
+              <el-select v-model="form.customerName" filterable clearable style="width:100%" @change="handleCustomerChange">
+                <el-option v-for="item in customerOptions" :key="item.customerId" :label="item.customerName" :value="item.customerName" />
+              </el-select>
+            </el-form-item>
+          </el-col>
           <el-col :span="8"><el-form-item label="状态"><el-select v-model="form.orderStatus" style="width:100%"><el-option v-for="item in statuses" :key="item" :label="item" :value="item" /></el-select></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="订单日期"><el-date-picker v-model="form.orderDate" value-format="yyyy-MM-dd" type="date" style="width:100%" /></el-form-item></el-col>
           <el-col :span="8"><el-form-item label="交货日期"><el-date-picker v-model="form.deliveryDate" value-format="yyyy-MM-dd" type="date" style="width:100%" /></el-form-item></el-col>
@@ -83,34 +91,42 @@
       </el-table>
       <pagination v-show="skuTotal>0" :total="skuTotal" :page.sync="skuQuery.pageNum" :limit.sync="skuQuery.pageSize" @pagination="getSkuList" />
     </el-dialog>
+
+    <excel-import-dialog ref="importSalesRef" title="销售订单导入" action="/erp/sales/importData" template-action="/erp/sales/importTemplate" template-file-name="sales_order_import_template" @success="getList" />
   </div>
 </template>
 
 <script>
-import { listSales, getSales, addSales, updateSales, delSales } from "@/api/erp/sales"
+import { listSales, getSales, addSales, updateSales, delSales, generateProduction } from "@/api/erp/sales"
+import { optionselectCustomer } from "@/api/erp/customer"
 import { listStyleSku } from "@/api/erp/style"
+import ExcelImportDialog from "@/components/ExcelImportDialog"
 
 export default {
   name: "ErpSales",
+  components: { ExcelImportDialog },
   data() {
     return {
       loading: true, ids: [], single: true, multiple: true, showSearch: true, total: 0, open: false, title: "",
+      customerOptions: [],
       orderList: [], statuses: ["草稿", "已确认", "生产中", "已完成", "已取消"],
       queryParams: { pageNum: 1, pageSize: 10, salesOrderNo: undefined, customerName: undefined, orderStatus: undefined },
-      form: {}, rules: { customerName: [{ required: true, message: "客户不能为空", trigger: "blur" }] },
+      form: {}, rules: { customerName: [{ required: true, message: "客户不能为空", trigger: "change" }] },
       skuOpen: false, skuLoading: false, skuList: [], skuTotal: 0, skuRowIndex: -1, skuQuery: { pageNum: 1, pageSize: 10, styleNo: undefined, skuCode: undefined, status: "0" }
     }
   },
-  created() { this.getList() },
+  created() { this.getList(); this.getCustomerOptions() },
   methods: {
+    getCustomerOptions() { optionselectCustomer().then(res => { this.customerOptions = res.data || [] }) },
     getList() { this.loading = true; listSales(this.queryParams).then(res => { this.orderList = res.rows; this.total = res.total; this.loading = false }) },
-    reset() { this.form = { salesOrderNo: undefined, customerName: undefined, orderDate: this.parseTime(new Date(), "{y}-{m}-{d}"), deliveryDate: undefined, orderStatus: "草稿", detailList: [] }; this.resetForm("form") },
+    reset() { this.form = { salesOrderNo: undefined, customerId: undefined, customerName: undefined, orderDate: this.parseTime(new Date(), "{y}-{m}-{d}"), deliveryDate: undefined, orderStatus: "草稿", detailList: [] }; this.resetForm("form") },
     cancel() { this.open = false; this.reset() },
     handleQuery() { this.queryParams.pageNum = 1; this.getList() },
     resetQuery() { this.resetForm("queryForm"); this.handleQuery() },
     handleSelectionChange(selection) { this.ids = selection.map(item => item.salesOrderId); this.single = selection.length !== 1; this.multiple = !selection.length },
     handleAdd() { this.reset(); this.open = true; this.title = "新增销售订单" },
     handleUpdate(row) { this.reset(); getSales(row.salesOrderId || this.ids).then(res => { this.form = { ...res.data, detailList: res.data.detailList || [] }; this.open = true; this.title = "销售订单" }) },
+    handleCustomerChange(customerName) { const customer = this.customerOptions.find(item => item.customerName === customerName); this.form.customerId = customer ? customer.customerId : undefined },
     addDetail() { this.form.detailList.push({ orderQty: 0, unitPrice: 0 }) },
     removeDetail(index) { this.form.detailList.splice(index, 1) },
     openSkuSelector(index) { this.skuRowIndex = index; this.skuOpen = true; this.getSkuList() },
@@ -122,6 +138,8 @@ export default {
     },
     submitForm() { this.$refs["form"].validate(valid => { if (!valid) return; const req = this.form.salesOrderId ? updateSales(this.form) : addSales(this.form); req.then(() => { this.$modal.msgSuccess("保存成功"); this.open = false; this.getList() }) }) },
     handleDelete(row) { const ids = row.salesOrderId || this.ids; this.$modal.confirm('确认删除销售订单编号为"' + ids + '"的数据项？').then(() => delSales(ids)).then(() => { this.getList(); this.$modal.msgSuccess("删除成功") }).catch(() => {}) },
+    handleGenerateProduction(row) { this.$modal.confirm('确认根据销售订单"' + row.salesOrderNo + '"生成生产订单？').then(() => generateProduction(row.salesOrderId)).then(() => { this.getList(); this.$modal.msgSuccess("生产订单已生成") }).catch(() => {}) },
+    handleImport() { this.$refs.importSalesRef.open() },
     handleExport() { this.download('erp/sales/export', this.queryParams, `sales_${new Date().getTime()}.xlsx`) }
   }
 }

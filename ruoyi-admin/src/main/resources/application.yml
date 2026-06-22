@@ -27,6 +27,30 @@ minio:
   # 对象名前缀
   objectPrefix: erp
 
+# 本地大模型配置（Ollama/Qwen）
+ai:
+  ollama:
+    enabled: true
+    base-url: http://127.0.0.1:11434
+    model: qwen3:8b
+    embedding-model: bge-m3
+    rag-enabled: true
+    rag-top-k: 5
+    rag-min-score: 0.2
+    timeout-seconds: 120
+    temperature: 0.3
+    system-prompt: 你是曹氏 ERP 系统中的智能助手，请用简洁、准确的中文回答用户问题。
+
+# 第三方物流查询配置（默认快递鸟即时查询）
+logistics:
+  enabled: false
+  provider: kdniao
+  kdniao:
+    ebusiness-id:
+    app-key:
+    api-url: https://api.kdniao.com/Ebusiness/EbusinessOrderHandle.aspx
+    request-type: 1002
+
 # 开发环境配置
 server:
   # 服务器的HTTP端口，默认为8080

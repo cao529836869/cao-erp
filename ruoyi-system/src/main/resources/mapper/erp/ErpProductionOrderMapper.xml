@@ -28,7 +28,7 @@
     <sql id="selectProductionOrderVo">
         select o.production_order_id, o.production_order_no, o.sales_order_id, o.sales_order_no,
                o.customer_id, o.customer_name, o.plan_start_date, o.plan_finish_date,
-               o.total_qty, o.completed_qty, o.order_status, d.item_summary, ifnull(p.picking_posted_flag, 0) as picking_posted_flag,
+               o.total_qty, ifnull(c.completed_qty, 0) as completed_qty, o.order_status, d.item_summary, ifnull(p.picking_posted_flag, 0) as picking_posted_flag,
                o.audit_by, o.audit_time, o.create_by, o.create_time, o.update_by, o.update_time, o.remark
         from erp_production_order o
         left join (
@@ -44,6 +44,14 @@
             from erp_outbound_order
             group by source_no
         ) p on p.source_no = o.production_order_no
+        left join (
+            select co.production_order_id,
+                   sum(ifnull(cod.cut_qty, 0)) as completed_qty
+            from erp_cut_order co
+            inner join erp_cut_order_detail cod on cod.cut_order_id = co.cut_order_id
+            where co.cut_status != 3
+            group by co.production_order_id
+        ) c on c.production_order_id = o.production_order_id
     </sql>
 
     <select id="selectProductionOrderList" parameterType="ErpProductionOrder" resultMap="ErpProductionOrderResult">
@@ -67,6 +75,13 @@
     <select id="checkProductionOrderNoUnique" parameterType="String" resultMap="ErpProductionOrderResult">
         <include refid="selectProductionOrderVo"/>
         where o.production_order_no = #{productionOrderNo} limit 1
+    </select>
+
+    <select id="countProductionOrderBySalesOrderId" parameterType="Long" resultType="int">
+        select count(1)
+        from erp_production_order
+        where sales_order_id = #{salesOrderId}
+          and order_status != '已关闭'
     </select>
 
     <insert id="insertProductionOrder" parameterType="ErpProductionOrder" useGeneratedKeys="true" keyProperty="productionOrderId">

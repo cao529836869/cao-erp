@@ -8,6 +8,10 @@ export function getCut(cutOrderId) {
   return request({ url: '/erp/cut/' + cutOrderId, method: 'get' })
 }
 
+export function getCutByProduction(productionOrderId) {
+  return request({ url: '/erp/cut/production/' + productionOrderId, method: 'get' })
+}
+
 export function addCut(data) {
   return request({ url: '/erp/cut', method: 'post', data })
 }

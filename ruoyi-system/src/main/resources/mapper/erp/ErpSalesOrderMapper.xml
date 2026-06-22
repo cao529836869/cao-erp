@@ -48,6 +48,12 @@
         where s.sales_order_id = #{salesOrderId}
     </select>
 
+    <select id="selectSalesOrderByNo" parameterType="String" resultMap="ErpSalesOrderResult">
+        <include refid="selectSalesOrderVo"/>
+        where s.sales_order_no = #{salesOrderNo}
+        limit 1
+    </select>
+
     <insert id="insertSalesOrder" parameterType="ErpSalesOrder" useGeneratedKeys="true" keyProperty="salesOrderId">
         insert into erp_sales_order(sales_order_no, customer_id, customer_name, order_date, delivery_date,
             total_qty, total_amount, order_status, create_by, create_time, remark)
@@ -60,6 +66,12 @@
         set customer_id = #{customerId}, customer_name = #{customerName}, order_date = #{orderDate},
             delivery_date = #{deliveryDate}, total_qty = #{totalQty}, total_amount = #{totalAmount},
             order_status = #{orderStatus}, update_by = #{updateBy}, update_time = sysdate(), remark = #{remark}
+        where sales_order_id = #{salesOrderId}
+    </update>
+
+    <update id="updateSalesOrderStatus" parameterType="ErpSalesOrder">
+        update erp_sales_order
+        set order_status = #{orderStatus}, update_by = #{updateBy}, update_time = sysdate()
         where sales_order_id = #{salesOrderId}
     </update>
 

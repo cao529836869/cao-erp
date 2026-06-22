@@ -15,6 +15,8 @@ public interface ErpStyleSkuMapper
 
     public List<ErpStyleSku> selectErpStyleSkuByStyleId(Long styleId);
 
+    public ErpStyleSku selectErpStyleSkuBySkuCode(String skuCode);
+
     public int batchInsertErpStyleSku(List<ErpStyleSku> list);
 
     public int deleteErpStyleSkuByStyleId(Long styleId);

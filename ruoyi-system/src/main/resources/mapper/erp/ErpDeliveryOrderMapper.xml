@@ -13,6 +13,10 @@
         <result property="deliveryDate" column="delivery_date"/>
         <result property="totalQty" column="total_qty"/>
         <result property="deliveryStatus" column="delivery_status"/>
+        <result property="logisticsCompany" column="logistics_company"/>
+        <result property="trackingNo" column="tracking_no"/>
+        <result property="outboundOrderId" column="outbound_order_id"/>
+        <result property="outboundOrderNo" column="outbound_order_no"/>
         <result property="createBy" column="create_by"/>
         <result property="createTime" column="create_time"/>
         <result property="updateBy" column="update_by"/>
@@ -22,7 +26,7 @@
 
     <sql id="selectDeliveryOrderVo">
         select delivery_order_id, delivery_order_no, sales_order_id, sales_order_no, customer_id, customer_name,
-               warehouse_id, warehouse_name, delivery_date, total_qty, delivery_status,
+               warehouse_id, warehouse_name, delivery_date, total_qty, delivery_status, logistics_company, tracking_no, outbound_order_id, outbound_order_no,
                create_by, create_time, update_by, update_time, remark
         from erp_delivery_order
     </sql>
@@ -43,11 +47,17 @@
         where delivery_order_id = #{deliveryOrderId}
     </select>
 
+    <select id="selectDeliveryOrderByIdForUpdate" parameterType="Long" resultMap="ErpDeliveryOrderResult">
+        <include refid="selectDeliveryOrderVo"/>
+        where delivery_order_id = #{deliveryOrderId}
+        for update
+    </select>
+
     <insert id="insertDeliveryOrder" parameterType="ErpDeliveryOrder" useGeneratedKeys="true" keyProperty="deliveryOrderId">
         insert into erp_delivery_order(delivery_order_no, sales_order_id, sales_order_no, customer_id, customer_name,
-            warehouse_id, warehouse_name, delivery_date, total_qty, delivery_status, create_by, create_time, remark)
+            warehouse_id, warehouse_name, delivery_date, total_qty, delivery_status, logistics_company, tracking_no, outbound_order_id, outbound_order_no, create_by, create_time, remark)
         values(#{deliveryOrderNo}, #{salesOrderId}, #{salesOrderNo}, #{customerId}, #{customerName},
-            #{warehouseId}, #{warehouseName}, #{deliveryDate}, #{totalQty}, #{deliveryStatus}, #{createBy}, sysdate(), #{remark})
+            #{warehouseId}, #{warehouseName}, #{deliveryDate}, #{totalQty}, #{deliveryStatus}, #{logisticsCompany}, #{trackingNo}, #{outboundOrderId}, #{outboundOrderNo}, #{createBy}, sysdate(), #{remark})
     </insert>
 
     <update id="updateDeliveryOrder" parameterType="ErpDeliveryOrder">
@@ -55,7 +65,37 @@
         set sales_order_id = #{salesOrderId}, sales_order_no = #{salesOrderNo}, customer_id = #{customerId},
             customer_name = #{customerName}, warehouse_id = #{warehouseId}, warehouse_name = #{warehouseName},
             delivery_date = #{deliveryDate}, total_qty = #{totalQty}, delivery_status = #{deliveryStatus},
+            logistics_company = #{logisticsCompany}, tracking_no = #{trackingNo},
+            outbound_order_id = #{outboundOrderId}, outbound_order_no = #{outboundOrderNo},
             update_by = #{updateBy}, update_time = sysdate(), remark = #{remark}
+        where delivery_order_id = #{deliveryOrderId}
+          and delivery_status = '草稿'
+    </update>
+
+    <update id="updateDeliveryLogistics" parameterType="ErpDeliveryOrder">
+        update erp_delivery_order
+        set logistics_company = #{logisticsCompany}, tracking_no = #{trackingNo},
+            update_by = #{updateBy}, update_time = sysdate()
+        where delivery_order_id = #{deliveryOrderId}
+          and delivery_status = '已发货'
+    </update>
+
+    <update id="updateDeliveryStatus" parameterType="ErpDeliveryOrder">
+        update erp_delivery_order
+        set delivery_status = #{deliveryStatus}, update_by = #{updateBy}, update_time = sysdate()
+        where delivery_order_id = #{deliveryOrderId}
+    </update>
+
+    <update id="updateDeliveryStatusByOutboundOrderId" parameterType="ErpDeliveryOrder">
+        update erp_delivery_order
+        set delivery_status = #{deliveryStatus}, update_by = #{updateBy}, update_time = sysdate()
+        where outbound_order_id = #{outboundOrderId}
+    </update>
+
+    <update id="updateDeliveryOutbound" parameterType="ErpDeliveryOrder">
+        update erp_delivery_order
+        set delivery_status = #{deliveryStatus}, outbound_order_id = #{outboundOrderId}, outbound_order_no = #{outboundOrderNo},
+            update_by = #{updateBy}, update_time = sysdate()
         where delivery_order_id = #{deliveryOrderId}
     </update>
 

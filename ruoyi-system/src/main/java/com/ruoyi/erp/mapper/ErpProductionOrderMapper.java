@@ -8,6 +8,7 @@ public interface ErpProductionOrderMapper
     public ErpProductionOrder selectProductionOrderById(Long productionOrderId);
     public List<ErpProductionOrder> selectProductionOrderList(ErpProductionOrder productionOrder);
     public ErpProductionOrder checkProductionOrderNoUnique(String productionOrderNo);
+    public int countProductionOrderBySalesOrderId(Long salesOrderId);
     public int insertProductionOrder(ErpProductionOrder productionOrder);
     public int updateProductionOrder(ErpProductionOrder productionOrder);
     public int updateProductionOrderRelease(ErpProductionOrder productionOrder);
