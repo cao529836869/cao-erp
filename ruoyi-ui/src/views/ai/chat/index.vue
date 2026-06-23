@@ -12,6 +12,11 @@
             size="small"
             active-text="知识库增强"
           />
+          <el-switch
+            v-model="agentEnabled"
+            size="small"
+            active-text="ERP工具"
+          />
           <el-select
             v-model="selectedModel"
             size="small"
@@ -47,6 +52,12 @@
               <span>{{ item.time }}</span>
             </div>
             <div class="message-content">{{ item.content }}</div>
+            <div v-if="item.toolCalls && item.toolCalls.length" class="tool-traces">
+              <div v-for="tool in item.toolCalls" :key="tool.toolName" class="tool-trace">
+                <i class="el-icon-connection"></i>
+                <span>已调用 {{ tool.toolName }}</span>
+              </div>
+            </div>
           </div>
         </div>
         <div v-if="loading" class="message-row assistant">
@@ -95,6 +106,7 @@ export default {
       selectedModel: '',
       modelOptions: [],
       ragEnabled: true,
+      agentEnabled: true,
       modelLoading: false,
       loading: false,
       messages: [
@@ -127,6 +139,9 @@ export default {
     ragEnabled() {
       this.saveState()
     },
+    agentEnabled() {
+      this.saveState()
+    },
     messages: {
       deep: true,
       handler() {
@@ -143,6 +158,7 @@ export default {
       this.prompt = state.prompt || ''
       this.selectedModel = state.selectedModel || ''
       this.ragEnabled = state.ragEnabled !== undefined ? state.ragEnabled : true
+      this.agentEnabled = state.agentEnabled !== undefined ? state.agentEnabled : true
       this.messages = Array.isArray(state.messages) && state.messages.length ? state.messages : this.messages
       this.scrollToBottom()
     },
@@ -151,6 +167,7 @@ export default {
         prompt: this.prompt,
         selectedModel: this.selectedModel,
         ragEnabled: this.ragEnabled,
+        agentEnabled: this.agentEnabled,
         messages: this.messages
       })
     },
@@ -178,10 +195,11 @@ export default {
       chat({
         prompt: text,
         model: this.selectedModel,
-        ragEnabled: this.ragEnabled
+        ragEnabled: this.ragEnabled,
+        agentEnabled: this.agentEnabled
       }).then(response => {
         const data = response.data || {}
-        const message = this.createMessage('assistant', data.content || '')
+        const message = this.createMessage('assistant', data.content || '', data.toolCalls || [])
         this.messages.push(message)
       }).finally(() => {
         this.loading = false
@@ -221,11 +239,12 @@ export default {
         this.sendMessage()
       }
     },
-    createMessage(role, content) {
+    createMessage(role, content, toolCalls) {
       return {
         id: Date.now() + Math.random(),
         role,
         content,
+        toolCalls: toolCalls || [],
         time: this.formatTime(new Date())
       }
     },
@@ -365,6 +384,24 @@ export default {
   word-break: break-word;
   line-height: 1.7;
   font-size: 14px;
+}
+
+.tool-traces {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tool-trace {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #edf4ff;
+  color: #2b5f9e;
+  font-size: 12px;
 }
 
 .loading-bubble {

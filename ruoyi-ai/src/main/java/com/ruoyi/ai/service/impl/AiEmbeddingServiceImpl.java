@@ -51,10 +51,11 @@ public class AiEmbeddingServiceImpl implements IAiEmbeddingService
         body.put("model", properties.getEmbeddingModel());
         body.put("input", input);
 
+        String embedUrl = normalizeBaseUrl(properties.getBaseUrl()) + "/api/embed";
         try
         {
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(normalizeBaseUrl(properties.getBaseUrl()) + "/api/embed"))
+                    .uri(URI.create(embedUrl))
                     .timeout(Duration.ofSeconds(properties.getTimeoutSeconds()))
                     .header("Content-Type", "application/json")
                     .header("Accept", "application/json")
@@ -70,7 +71,7 @@ public class AiEmbeddingServiceImpl implements IAiEmbeddingService
         }
         catch (IOException e)
         {
-            throw new ServiceException("无法连接 Ollama 向量服务: " + e.getMessage());
+            throw new ServiceException("无法连接 Ollama 向量服务（url=" + embedUrl + "，model=" + properties.getEmbeddingModel() + "）: " + describeIOException(e));
         }
         catch (InterruptedException e)
         {
@@ -111,6 +112,24 @@ public class AiEmbeddingServiceImpl implements IAiEmbeddingService
             normalized = normalized.substring(0, normalized.length() - 1);
         }
         return normalized;
+    }
+
+    private String describeIOException(IOException e)
+    {
+        if (StringUtils.isNotBlank(e.getMessage()))
+        {
+            return e.getClass().getSimpleName() + ": " + e.getMessage();
+        }
+        Throwable cause = e.getCause();
+        if (cause == null)
+        {
+            return e.getClass().getSimpleName();
+        }
+        if (StringUtils.isNotBlank(cause.getMessage()))
+        {
+            return e.getClass().getSimpleName() + " caused by " + cause.getClass().getSimpleName() + ": " + cause.getMessage();
+        }
+        return e.getClass().getSimpleName() + " caused by " + cause.getClass().getSimpleName();
     }
 
     private String abbreviate(String text)

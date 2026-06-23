@@ -16,6 +16,8 @@ public class AiChatResponse
 
     private List<AiKnowledgeHit> references;
 
+    private List<AiToolTrace> toolCalls;
+
     public String getModel()
     {
         return model;
@@ -74,5 +76,15 @@ public class AiChatResponse
     public void setReferences(List<AiKnowledgeHit> references)
     {
         this.references = references;
+    }
+
+    public List<AiToolTrace> getToolCalls()
+    {
+        return toolCalls;
+    }
+
+    public void setToolCalls(List<AiToolTrace> toolCalls)
+    {
+        this.toolCalls = toolCalls;
     }
 }

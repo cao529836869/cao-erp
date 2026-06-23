@@ -11,6 +11,8 @@ public class AiChatRequest
 
     private Boolean ragEnabled;
 
+    private Boolean agentEnabled;
+
     private String systemPrompt;
 
     public String getPrompt()
@@ -41,6 +43,16 @@ public class AiChatRequest
     public void setRagEnabled(Boolean ragEnabled)
     {
         this.ragEnabled = ragEnabled;
+    }
+
+    public Boolean getAgentEnabled()
+    {
+        return agentEnabled;
+    }
+
+    public void setAgentEnabled(Boolean agentEnabled)
+    {
+        this.agentEnabled = agentEnabled;
     }
 
     public String getSystemPrompt()
