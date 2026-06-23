@@ -39,7 +39,7 @@ ai:
     rag-min-score: 0.2
     timeout-seconds: 120
     temperature: 0.3
-    system-prompt: 你是曹氏 ERP 系统中的智能助手，请用简洁、准确的中文回答用户问题。
+    system-prompt: 你是一丫一 ERP 系统中的智能助手，请用简洁、准确的中文回答用户问题。
 
 # 第三方物流查询配置（默认快递鸟即时查询）
 logistics:

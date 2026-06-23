@@ -29,6 +29,14 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         order by create_time desc, bom_id desc
     </select>
 
+    <select id="selectErpStyleBomByStyleNo" parameterType="String" resultMap="ErpStyleBomResult">
+        select bom_id, bom_no, style_id, style_no, version_no, bom_status, effective_date,
+               audit_by, audit_time, create_by, create_time, update_by, update_time, remark
+        from erp_style_bom
+        where style_no = #{styleNo}
+        order by create_time desc, bom_id desc
+    </select>
+
     <insert id="insertErpStyleBom" parameterType="ErpStyleBom" useGeneratedKeys="true" keyProperty="bomId">
         insert into erp_style_bom
             (bom_no, style_id, style_no, version_no, bom_status, effective_date,

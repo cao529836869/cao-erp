@@ -13,6 +13,8 @@ public interface ErpStyleBomMapper
 {
     public List<ErpStyleBom> selectErpStyleBomByStyleId(Long styleId);
 
+    public List<ErpStyleBom> selectErpStyleBomByStyleNo(String styleNo);
+
     public int insertErpStyleBom(ErpStyleBom erpStyleBom);
 
     public int deleteErpStyleBomByStyleId(Long styleId);

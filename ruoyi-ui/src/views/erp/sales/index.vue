@@ -125,15 +125,30 @@ export default {
     resetQuery() { this.resetForm("queryForm"); this.handleQuery() },
     handleSelectionChange(selection) { this.ids = selection.map(item => item.salesOrderId); this.single = selection.length !== 1; this.multiple = !selection.length },
     handleAdd() { this.reset(); this.open = true; this.title = "新增销售订单" },
-    handleUpdate(row) { this.reset(); getSales(row.salesOrderId || this.ids).then(res => { this.form = { ...res.data, detailList: res.data.detailList || [] }; this.open = true; this.title = "销售订单" }) },
+    handleUpdate(row) { this.reset(); getSales(row.salesOrderId || this.ids).then(res => { this.form = { ...res.data, detailList: this.prepareDetailRows(res.data.detailList || []) }; this.open = true; this.title = "销售订单" }) },
     handleCustomerChange(customerName) { const customer = this.customerOptions.find(item => item.customerName === customerName); this.form.customerId = customer ? customer.customerId : undefined },
-    addDetail() { this.form.detailList.push({ orderQty: 0, unitPrice: 0 }) },
+    buildEmptyDetail() {
+      return { styleId: undefined, skuId: undefined, skuCode: "", styleNo: "", styleName: "", colorName: "", sizeName: "", orderQty: 0, unitPrice: 0 }
+    },
+    prepareDetailRows(list) {
+      return list.map(row => ({ ...this.buildEmptyDetail(), ...row }))
+    },
+    addDetail() { this.form.detailList.push(this.buildEmptyDetail()) },
     removeDetail(index) { this.form.detailList.splice(index, 1) },
     openSkuSelector(index) { this.skuRowIndex = index; this.skuOpen = true; this.getSkuList() },
     getSkuList() { this.skuLoading = true; listStyleSku(this.skuQuery).then(res => { this.skuList = res.rows; this.skuTotal = res.total; this.skuLoading = false }) },
     selectSku(sku) {
-      const row = this.form.detailList[this.skuRowIndex]
-      Object.assign(row, { styleId: sku.styleId, skuId: sku.skuId, skuCode: sku.skuCode, styleNo: sku.styleNo, styleName: sku.styleName, colorName: sku.colorName, sizeName: sku.sizeName })
+      const row = {
+        ...this.form.detailList[this.skuRowIndex],
+        styleId: sku.styleId,
+        skuId: sku.skuId,
+        skuCode: sku.skuCode || "",
+        styleNo: sku.styleNo || "",
+        styleName: sku.styleName || "",
+        colorName: sku.colorName || "",
+        sizeName: sku.sizeName || ""
+      }
+      this.$set(this.form.detailList, this.skuRowIndex, row)
       this.skuOpen = false
     },
     submitForm() { this.$refs["form"].validate(valid => { if (!valid) return; const req = this.form.salesOrderId ? updateSales(this.form) : addSales(this.form); req.then(() => { this.$modal.msgSuccess("保存成功"); this.open = false; this.getList() }) }) },

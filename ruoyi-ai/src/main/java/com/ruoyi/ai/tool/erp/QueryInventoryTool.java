@@ -9,6 +9,8 @@ import com.alibaba.fastjson2.JSONObject;
 import com.ruoyi.ai.tool.AiTool;
 import com.ruoyi.common.utils.StringUtils;
 import com.ruoyi.erp.domain.ErpInventory;
+import com.ruoyi.erp.domain.ErpStyleSku;
+import com.ruoyi.erp.mapper.ErpStyleSkuMapper;
 import com.ruoyi.erp.service.IErpInventoryService;
 
 /**
@@ -26,9 +28,12 @@ public class QueryInventoryTool implements AiTool
 
     private final IErpInventoryService inventoryService;
 
-    public QueryInventoryTool(IErpInventoryService inventoryService)
+    private final ErpStyleSkuMapper styleSkuMapper;
+
+    public QueryInventoryTool(IErpInventoryService inventoryService, ErpStyleSkuMapper styleSkuMapper)
     {
         this.inventoryService = inventoryService;
+        this.styleSkuMapper = styleSkuMapper;
     }
 
     @Override
@@ -68,6 +73,25 @@ public class QueryInventoryTool implements AiTool
 
         int limit = normalizeLimit(arguments.getInteger("limit"));
         List<ErpInventory> rows = inventoryService.selectInventoryList(query);
+        ErpStyleSku matchedStyleSku = null;
+
+        /*
+         * 成衣库存的 item_code 当前保存款号，item_id 保存 sku_id；
+         * 用户输入完整 SKU 编码时，先用 SKU 主数据解析，再按 item_id 兜底查库存。
+         */
+        if (rows.isEmpty() && StringUtils.isNotBlank(query.getItemCode()))
+        {
+            matchedStyleSku = styleSkuMapper.selectErpStyleSkuBySkuCode(query.getItemCode());
+            if (matchedStyleSku != null)
+            {
+                ErpInventory skuInventoryQuery = new ErpInventory();
+                skuInventoryQuery.setWarehouseName(query.getWarehouseName());
+                skuInventoryQuery.setItemType("成衣");
+                skuInventoryQuery.setItemId(matchedStyleSku.getSkuId());
+                skuInventoryQuery.setBatchNo(query.getBatchNo());
+                rows = inventoryService.selectInventoryList(skuInventoryQuery);
+            }
+        }
 
         JSONArray data = new JSONArray();
         for (int i = 0; i < rows.size() && i < limit; i++)
@@ -93,6 +117,17 @@ public class QueryInventoryTool implements AiTool
         result.put("total", rows.size());
         result.put("returned", data.size());
         result.put("items", data);
+        if (matchedStyleSku != null)
+        {
+            JSONObject sku = new JSONObject();
+            sku.put("skuId", matchedStyleSku.getSkuId());
+            sku.put("skuCode", matchedStyleSku.getSkuCode());
+            sku.put("styleNo", matchedStyleSku.getStyleNo());
+            sku.put("styleName", matchedStyleSku.getStyleName());
+            sku.put("colorName", matchedStyleSku.getColorName());
+            sku.put("sizeName", matchedStyleSku.getSizeName());
+            result.put("matchedStyleSku", sku);
+        }
         return result;
     }
 

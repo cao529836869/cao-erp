@@ -52,6 +52,30 @@ create table if not exists ai_knowledge_chunk (
   key idx_ai_knowledge_embedding_model (embedding_model)
 ) engine=innodb auto_increment=1 default charset=utf8mb4 collate=utf8mb4_unicode_ci comment='AI知识库片段表';
 
+create table if not exists ai_agent_memory (
+  memory_id          bigint(20)      not null auto_increment    comment '记忆ID',
+  memory_type        varchar(50)     not null                   comment '记忆类型，如 inventory_snapshot',
+  memory_key         varchar(150)    default null               comment '业务记忆键，如 KDS-FLOW-002',
+  memory_title       varchar(200)    default null               comment '记忆标题',
+  tool_name          varchar(100)    default null               comment '来源工具名',
+  arguments_json     longtext                                   comment '工具调用参数JSON',
+  result_json        longtext                                   comment '工具调用结果JSON',
+  summary            varchar(1000)   default null               comment '简短摘要',
+  session_id         varchar(100)    default null               comment '会话ID',
+  oper_name          varchar(64)     not null                   comment '操作账号',
+  source_chat_log_id bigint(20)      default null               comment '来源对话日志ID',
+  expire_time        datetime                                   comment '过期时间',
+  status             char(1)         default '0'                comment '状态（0有效 1失效）',
+  create_time        datetime                                   comment '创建时间',
+  update_time        datetime                                   comment '更新时间',
+  remark             varchar(500)    default null               comment '备注',
+  primary key (memory_id),
+  key idx_ai_agent_memory_user_type_key (oper_name, memory_type, memory_key),
+  key idx_ai_agent_memory_session (session_id),
+  key idx_ai_agent_memory_expire_time (expire_time),
+  key idx_ai_agent_memory_create_time (create_time)
+) engine=innodb auto_increment=1 default charset=utf8mb4 collate=utf8mb4_unicode_ci comment='AI Agent记忆表';
+
 insert into sys_menu values(4000, 'AI工具', '0', '6', 'ai', null, '', '', 1, 0, 'M', '0', '0', '', 'message', 'admin', sysdate(), '', null, 'AI工具目录');
 insert into sys_menu values(4001, '对话', '4000', '1', 'chat', 'ai/chat/index', '', 'AiChat', 1, 0, 'C', '0', '0', 'ai:chat:use', 'message', 'admin', sysdate(), '', null, 'AI对话页面');
 insert into sys_menu values(4002, 'AI对话使用', '4001', '1', '#', '', '', '', 1, 0, 'F', '0', '0', 'ai:chat:use', '#', 'admin', sysdate(), '', null, '');

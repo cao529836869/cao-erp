@@ -15,6 +15,10 @@ public class AiChatRequest
 
     private String systemPrompt;
 
+    private String sessionId;
+
+    private String operName;
+
     public String getPrompt()
     {
         return prompt;
@@ -63,5 +67,25 @@ public class AiChatRequest
     public void setSystemPrompt(String systemPrompt)
     {
         this.systemPrompt = systemPrompt;
+    }
+
+    public String getSessionId()
+    {
+        return sessionId;
+    }
+
+    public void setSessionId(String sessionId)
+    {
+        this.sessionId = sessionId;
+    }
+
+    public String getOperName()
+    {
+        return operName;
+    }
+
+    public void setOperName(String operName)
+    {
+        this.operName = operName;
     }
 }

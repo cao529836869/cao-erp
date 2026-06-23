@@ -44,6 +44,7 @@ public class AiChatController extends BaseController
     @PostMapping("/chat")
     public AjaxResult chat(@Valid @RequestBody AiChatRequest request)
     {
+        request.setOperName(getUsername());
         AiChatLog chatLog = buildLog(request);
         try
         {
